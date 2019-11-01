@@ -10,7 +10,7 @@ To run full pipeline:
 
 If you already ran Unicycler you can input the assembly files:
 
-./ContigIdentifyer.sh [-i \<fastq filename\>] [-d \<database filename\>] [-g \<Unicycler assembly.gfa\>] [-f \<assembly.fasta\>]
+./ContigIdentifyer.sh [-i \<fastq filename\>] [-d \<database filename\>] [-g \<Unicycler assembly.gfa\>] [-f \<Unicycler assembly.fasta\>]
 
 ## Pipeline overview
 
