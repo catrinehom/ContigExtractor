@@ -2,6 +2,11 @@
 
 ContigIdentifyer is pipeline to find read ID's from Nanopore MinION sequencing matching an input database. 
 
+## Requirements
+
+- KMA
+- Unicycler
+
 ## Usage
 
 To run full pipeline:
