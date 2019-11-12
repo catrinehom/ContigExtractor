@@ -1,31 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-#Program: SegmentIdentifier
-#Description: This program can find ID corresponding to segments from an input database in your MinION data.
+Program: ContigExtractor
+Description: This program can find ID corresponding to contigs from a input references in your MinION data.
 Step 2: This is the step 2 of the pipeline.
-#Version: 1.0
-#Author: Catrine Ahrens Høm
-
-#Usage:
-    ## SegmentIdentifier.sh [-i] <MinION reads in fastq format> [-d] <Database of wanted segments in fasta format>
-    ## -i --input: MinION filename path relative to current working directory.
-    ## -d --database: Database filename path relative to current working directory.
-    ## ID.txt will be available in the working directory after run.
-
-#This pipeline consists of 5 steps:
-    ## STEP 1:  Unicycler (Skipped if assembly file is supplied)
-    ## STEP 2:  Find the segments which match database
-    ## STEP 3:  Choose this segment in fsa fragment
-    ## STEP 4:  KMA fragment against reads
-    ## STEP 5:  Find IDs and save to file
+Version: 1.0
+Author: Catrine Ahrens Høm
 """
 import sys
 import re
 from argparse import ArgumentParser
 
 ###########################################################################
-# STEP 2: Choose this segment in fsa format
+# STEP 2: Choose this contig in fasta format
 ###########################################################################
 
 ### Get input
@@ -34,11 +21,17 @@ from argparse import ArgumentParser
 parser = ArgumentParser()
 parser.add_argument('-i', '--input', dest='input',help='assembly.gfa file', default='./assemblytest.gfa')
 parser.add_argument('-r', '--res', dest='res', help='.res file, output from unicycler', default='./alignmenttest.res')
+parser.add_argument('-o', '--output', dest='o', help='output filename')
 args = parser.parse_args()
 
 # Define input as variables
 filename = args.input
 resname = args.res
+o = args.o
+
+# THIS SHOULD BE FLAGS
+c = True
+l = 500000
 
 
 # Open input files    
@@ -59,12 +52,12 @@ except IOError as error:
 
 # Define pattern for information (length, depth, circular)  for header 
 Header_gfa_pattern = r'S\t([0-9]*)\t[ATGC]*\tLN:i:([0-9]*)\tdp:f:([0-9.]*)'
-Header_fsa_pattern = r'>([0-9]*)'
-Circular_pattern = r'L[\t ]*([0-9]*)[\t ]*[+-][\t ]*[0-9]*[\t ]*[+-][\t ]*[0-9A-Z]*'
+#Header_fsa_pattern = r'>([0-9]*)'
+Circular_pattern = r'L[\t ]*([0-9]*)[\t ]*[+-][\t ]*([0-9]*)[\t ]*[+-][\t ]*[0-9A-Z]*'
 
 # Define empty set/list
-Circular_segment = set()
-segmentnumber = list()
+Circular_contig = set()
+contignumber = list()
 length = list()
 depth = list()
 Circular = list()
@@ -74,25 +67,26 @@ Circular = list()
 for line in infile:
     Header_gfa_result = re.search(Header_gfa_pattern,line)       
     if Header_gfa_result != None: 
-        segmentnumber.append(Header_gfa_result.group(1))
+        contignumber.append(Header_gfa_result.group(1))
         length.append(Header_gfa_result.group(2))
         depth.append(Header_gfa_result.group(3))
           
     Circular_result = re.search(Circular_pattern,line)
     if Circular_result != None:
-        Circular_segment.add(Circular_result.group(1))
+        if Circular_result.group(1) == Circular_result.group(2):
+            Circular_contig.add(Circular_result.group(1))
             
-for i in range(1,len(segmentnumber)+1):
-    if str(i) in Circular_segment:
-        Circular.append('Circular')
+for i in range(1,len(contignumber)+1):
+    if str(i) in Circular_contig:
+        Circular.append('Yes')
     else:
-        Circular.append('Not circular')
+        Circular.append('No')
           
         
 headers = list()
 
-for i in range(0,len(segmentnumber)):
-    headers.append('>Segment '+segmentnumber[i]+', length = '+length[i]+', depth = '+depth[i]+', circular='+Circular[i])
+for i in range(0,len(contignumber)):
+    headers.append('>Contig'+contignumber[i]+' length='+length[i]+' depth='+depth[i]+' circular='+Circular[i])
     
 ### Choose contig 
 
@@ -104,7 +98,8 @@ next(resfile)
 
 # Look for contig matches in resfile
 for line in resfile:
-    matching_contigs.append(line[0].strip())
+    #matching_contigs.append(line[0].strip())
+    matching_contigs.append(re.findall('\d+',line)[0]) 
 
 # Remove empty in contigs
 while("" in matching_contigs): 
@@ -136,29 +131,32 @@ if bool(extracted_contigs) is False:
     print('Error! No contigs is found')
     sys.exit(1)
  
-keys_to_delete = list()           
+keys_to_delete = set()           
 
-# Check if it is circular and under 500.000 bp
+# Check if it is circular (if flag is true) and over specified length (defalut = 500.000 bp)
 for key in extracted_contigs:
     num = int(key)-1
-    if key not in Circular_segment:
-        print('Contig '+key+' is not circular! It is therefore excluded even though it matched the database.')
-        keys_to_delete.append(key)
-    elif int(length[num]) > 500000:
-        print('Contig '+key+' is over 50.0000 bp long! It is therefore excluded even though it matched the database.')
-        keys_to_delete.append(key)
+    if c:
+        if key not in Circular_contig:
+            print('Contig '+key+' is not circular! It is therefore excluded even though it matched the database.')
+            keys_to_delete.add(key)
+    if int(length[num]) > l:
+        print('Contig '+key+' is over'+str(l)+'bp long! It is therefore excluded even though it matched the database.')
+        keys_to_delete.add(key)
 
-# Delete keys that are not circular and over 500.000 bp
+# Delete keys that are not circular and over specified length (defalut = 500.000 bp)
 for key in keys_to_delete:
     del extracted_contigs[key]
-    
+ 
+# Error message for myself, should not be possible in  final pipeline 
+# and should be removed at some point
 if len(matching_contigs) != len(extracted_contigs):
-    print('Error! The assembly.gfa and alignment.res files does not match!')
+    print('Error! Something went completely wrong! \n The assembly.gfa and alignment.res files does not match!')
     sys.exit(1) 
 
 # Open outfile
-#contigs_str = '_'.join(extracted_contigs)
-outname = 'assembled_contigs.fsa'
+#contigs_str = '_'.join(extracted_contigs) # If filename should reflect which contigs used?
+outname = o+'/assembled_contigs.fasta'
 
 try:
     outfile = open(outname,'w')
