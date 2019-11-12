@@ -1,24 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-#Program: SegmentIdentifier
-#Description: This program can find ID corresponding to segments from an input database in your MinION data.
+Program: ContigExtractor
+Description: This program can find ID corresponding to contigs from a input references in your MinION data.
 Step 5: This is the step 5 of the pipeline.
-#Version: 1.0
-#Author: Catrine Ahrens Høm
-
-#Usage:
-    ## SegmentIdentifier.sh [-i] <MinION reads in fastq format> [-d] <Database of wanted segments in fasta format>
-    ## -i --input: MinION filename path relative to current working directory.
-    ## -d --database: Database filename path relative to current working directory.
-    ## ID.txt will be available in the working directory after run.
-
-#This pipeline consists of 5 steps:
-    ## STEP 1:  Unicycler (Skipped if assembly file is supplied)
-    ## STEP 2:  Find the segments which match database
-    ## STEP 3:  Choose this segment in fsa fragment
-    ## STEP 4:  KMA fragment against reads
-    ## STEP 5:  Find IDs and save to file
+Version: 1.0
+Author: Catrine Ahrens Høm
 """
 import sys
 import re
@@ -55,8 +42,12 @@ def OpenFile(filename,mode):
 # Input from command line
 parser = ArgumentParser()
 parser.add_argument('-i', '--input', dest='input',help='Input file to find IDs from', default='./reads_alignment.frag.gz')
+parser.add_argument('-o', '--output', dest='o', help='output filename')
 args = parser.parse_args()
-alignmentfrag = str(args.input)
+
+# Define input as variables
+alignmentfrag = args.input
+o = args.o
 
 
 # Define ID pattern
@@ -70,7 +61,7 @@ ID_pattern = re.compile(b'\s([\w-]+)\srunid=')
 infile = OpenFile(alignmentfrag,'rb')
 
 # Open output file
-outfilename = './ID.txt'
+outfilename = o+'/'+o+'_ID.txt'
 
 try:
     outfile = open(outfilename,'w')
@@ -90,7 +81,7 @@ for line in infile:
 
 # Check if any ID is found
 if not ID_set:
-    print('No IDs found in '+alignmentfrag+'!')
+    print('No IDs found in '+o+alignmentfrag+'!')
 
 # Print ID to outfile        
 for ID in ID_set:       
