@@ -11,7 +11,7 @@ ContigExtractor is a pipeline to find read ID's from Nanopore MinION sequencing 
 
 The following instructions will install the latest version of ContigExtractor:
 
-git clone git@github.com:catrinehom/ContigIdentifyer.git
+git clone https://github.com/catrinehom/ContigExtractor.git
 ./ContigExtractor_install.sh
 
 ## Usage
