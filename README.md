@@ -7,6 +7,13 @@ ContigExtractor is a pipeline to find read ID's from Nanopore MinION sequencing 
 - KMA
 - Unicycler
 
+## Installation
+
+The following instructions will install the latest version of ContigExtractor:
+
+git clone git@github.com:catrinehom/ContigIdentifyer.git
+./ContigExtractor_install.sh
+
 ## Usage
 
 To run full pipeline:
