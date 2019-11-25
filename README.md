@@ -16,7 +16,6 @@ git clone https://github.com/catrinehom/ContigExtractor.git
 
 cd ContigExtractor/
 
-chmod a+x ContigExtractor_install.sh
 chmod a+x ContigExtractor.sh
 chmod a+x ChooseContigs.py
 chmod a+x IDFinder.py
@@ -25,7 +24,7 @@ chmod a+x ErrorHandling.py
 
 ### Move to bin 
 You might want to move the program to your bin to make the program globally excecutable. 
-The placement of your bin depends on your system configuration, but comman paths is:
+The placement of your bin depends on your system configuration, but common paths is:
 
 ```bash
 /usr/local/bin/
