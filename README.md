@@ -56,6 +56,13 @@ If you already ran Unicycler you can input the assembly files:
 ./ContigExtractor.sh [-i <fastq filename>] [-r <references filename>] [-o <output filename>] [-g <Unicycler assembly.gfa>] [-f <Unicycler assembly.fasta>]
 ```
 
+### Optional flags
+```
+-t threads, default=8
+-c circular contigs output only, default='True'
+-l length (maximum) of contigs, default=500000
+```
+
 ## Pipeline overview
 
 ![alt text](https://github.com/catrinehom/ContigIdentifyer/blob/master/SSI_pipeline_overview2.png)
