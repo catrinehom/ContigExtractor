@@ -22,8 +22,11 @@
 ###########################################################################
 # GET INPUT
 ###########################################################################
-# load an enviroment
-#source activate sovp_test
+# load an enviroment (to be deleted in final pipeline, this is up to user)
+source activate unicycler_v0.4.7_no_stall
+
+# Start timer
+SECONDS=0
 
 # How to use program
 usage() { echo "Usage: $0 [-i <fastq filename>] [-r <references filename>] [-o <outputname>] [-g <Unicycler assembly.gfa] [-f assembly.fasta>]" 1>&2; exit 1; }
@@ -46,8 +49,8 @@ while getopts ":i:r:o:g:f:h" opt; do
         f)
             f=${OPTARG}
             ;;
-    
-        h) 
+
+        h)
             usage
             ;;
         *)
@@ -58,37 +61,48 @@ while getopts ":i:r:o:g:f:h" opt; do
 done
 shift $((OPTIND-1))
 
-
 # Check if required flags are empty
 if [ -z "${i}" ] || [ -z "${r}" ] || [ -z "${o}" ]; then
     echo "i, r and o are required flags"
     usage
 fi
 
+
 # Make output directory
-[ -d $o ] && echo "Output directory: ${o} already exists. Files will be overwritten"|| mkdir $o
+[ -d $o ] && echo "Output directory: ${o} already exists. Files will be overwritten."|| mkdir $o
+
+# Make logfile and empty it
+touch ${o}/${o}.log
+cat /dev/null > ${o}/${o}.log
 
 
 # Check format and that the files exists
 if [ -z "${g}" ] || [ -z "${f}" ]; then
-  ./ErrorHandling.py -i $i -r $r
+  ./ErrorHandling.py -i $i -r $r -o $o
 else
-  ./ErrorHandling.py -i $i -r $r -g $g -f $f
+  ./ErrorHandling.py -i $i -r $r -o $o -g $g -f $f
 fi
 
 # Check if python script exited with an error
 if [ $? -eq 0 ]
 then
   echo "Error handling of input done."
+  echo "Error handling of input done." >> ${o}/${o}.log
 else
   # Redirect stdout from echo command to stderr.
-  echo "Script exited due to input error." >&2
+  echo "Script exited due to input error."
+  echo "Script exited due to input error." >> ${o}/${o}.log
   exit 1
 fi
 
 # Print files used
 echo "Input used is ${i}"
 echo "References used is ${r}"
+echo "Input used is ${i}" >> ${o}/${o}.log
+echo "References used is ${r}" >> ${o}/${o}.log
+
+echo "Time stamp: $SECONDS seconds."
+echo "Time stamp: $SECONDS seconds." >> ${o}/${o}.log
 
 ###########################################################################
 # STEP 1: Unicycler
@@ -96,6 +110,7 @@ echo "References used is ${r}"
 # Run only Unicycler if no input is given
 if [ -z "${g}" ] || [ -z "${f}" ]; then
   echo "Starting STEP 1: Unicycler"
+  echo "Starting STEP 1: Unicycler" >> ${o}/${o}.log
 
   #Hardcoded, should maybe be flags
   t=8
@@ -106,49 +121,66 @@ if [ -z "${g}" ] || [ -z "${f}" ]; then
   g=$o$u"/assembly.gfa"
   f=$o$u"/assembly.fasta"
 
-  source activate unicycler_v0.4.7_no_stall
   /srv/data/tools/git.repositories/Unicycler/unicycler-runner.py -t $t -l $i -o $o$u --keep 0
 
   echo "$u is saved in current working directory."
+  echo "$u is saved in current working directory." >> ${o}/${o}.log
 else
     echo "STEP 1 is skipped due to already inputted Unicycler assembly."
     echo "Unicycler assembly used is ${g} and ${f}"
+    echo "STEP 1 is skipped due to already inputted Unicycler assembly." >> ${o}/${o}.log
+    echo "Unicycler assembly used is ${g} and ${f}" >> ${o}/${o}.log
 fi
 
+echo "Time stamp: $SECONDS seconds."
+echo "Time stamp: $SECONDS seconds." >> ${o}/${o}.log
+
 ###########################################################################
-# STEP 2: FIND WHICH CONTGS IS THE WANTED CONTIGS
+# STEP 2: FIND WANTED CONTGS
 ###########################################################################
 
-echo "Starting STEP 2: "
+echo "Starting STEP 2: Find wanted contigs"
+echo "Starting STEP 2: Find wanted contigs" >> ${o}/${o}.log
 
-source activate sovp_test
+cdb='contigs_database'
+res='blast_results.out'
 mkdir $o/databases
-kma index -i $f -o $o/databases/contigs_database
-kma -i $r -o $o/contigs_alignment -t_db $o/databases/contigs_database -mrs 0.5
+makeblastdb -in $f -parse_seqids -title $cdb -dbtype nucl -out $o/databases/$cdb
+blastn -db $o/databases/$cdb -query $r -out $o/$res
+
+echo "Time stamp: $SECONDS seconds."
+echo "Time stamp: $SECONDS seconds." >> ${o}/${o}.log
 
 ###########################################################################
-# STEP 3: Choose this contig in fasta format
+# STEP 3: CHOOSE CONTIGS
 ###########################################################################
 
-echo "Starting STEP 3: "
+echo "Starting STEP 3: Choose Contigs"
+echo "Starting STEP 3: Choose Contigs" >> ${o}/${o}.log
 
-./ChooseContigs.py -r $o/contigs_alignment.res -i $g -o $o
+./ChooseContigs.py -r $o/$res -i $g -o $o
 
 # Check if python script exited with an error
 if [ $? -eq 0 ]
 then
   echo "Contig(s) identified in input file."
+  echo "Contig(s) identified in input file."  >> ${o}/${o}.log
 else
   # Redirect stdout from echo command to stderr.
-  echo "Script exited due to error." >&2
+  echo "Script exited due to error."
+  echo "Script exited due to error." >> ${o}/${o}.log
   exit 1
 fi
 
+echo "Time stamp: $SECONDS seconds."
+echo "Time stamp: $SECONDS seconds." >> ${o}/${o}.log
+
 ###########################################################################
-# STEP 4:  KMA reads against contigs
+# STEP 4:  KMA READS AGAINST CONTIGS
 ###########################################################################
 
-echo "Starting STEP 4: "
+echo "Starting STEP 4: KMA reads against contigs."
+echo "Starting STEP 4: KMA reads against contigs." >> ${o}/${o}.log
 
 #Command used to index plasmid database:
 kma index -i $o/assembled_contigs.fasta -o $o/databases/reads_database
@@ -156,19 +188,27 @@ kma index -i $o/assembled_contigs.fasta -o $o/databases/reads_database
 #Command to run KMA:
 kma -i $i -o $o/reads_alignment -t_db $o/databases/reads_database -mrs 0.1 -bcNano -mp 20 -mem_mode
 
+echo "Time stamp: $SECONDS seconds."
+echo "Time stamp: $SECONDS seconds." >> ${o}/${o}.log
+
 ###########################################################################
-# STEP 5:  Find IDs and save to file
+# STEP 5:  FIND IDs
 ###########################################################################
 
-echo "Starting STEP 5: "
+echo "Starting STEP 5: Find IDs"
+echo "Starting STEP 5: Find IDs" >> ${o}/${o}.log
 
 ./IDFinder.py -i $o/reads_alignment.frag.gz -o $o
 
 # Check if python script exited with an error
 if [ $? -eq 0 ]
 then
-  echo "IDs found! ID.txt is saved in working directory."
+  echo "IDs found! ${o}_ID.txt is saved in ${o} directory."
+  echo "IDs found! ${o}_ID.txt is saved in ${o} directory." >> ${o}/${o}.log
 else
-  # Redirect stdout from echo command to stderr.
-  echo "No IDs found!" >&2
+  echo "No IDs found!"
+  echo "No IDs found!" >> ${o}/${o}.log
 fi
+
+echo "Time stamp: $SECONDS seconds."
+echo "Time stamp: $SECONDS seconds." >> ${o}/${o}.log
