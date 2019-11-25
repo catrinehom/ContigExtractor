@@ -11,7 +11,7 @@ ContigExtractor is a pipeline to find read ID's from contigs from Nanopore MinIO
 
 The following instructions will install the latest version of ContigExtractor:
 
-```bash
+```
 git clone https://github.com/catrinehom/ContigExtractor.git
 
 cd ContigExtractor/
@@ -26,17 +26,17 @@ chmod a+x ErrorHandling.py
 You might want to move the program to your bin to make the program globally excecutable. 
 The placement of your bin depends on your system configuration, but common paths is:
 
-```bash
+```
 /usr/local/bin/
 ```
 OR
-```bash
+```
 ~/bin/
 ```
 
 Example of move to bin:
 
-```bash
+```
 mv ContigExtractor.sh /usr/local/bin/
 mv ChooseContigs.py /usr/local/bin/
 mv IDFinder.py /usr/local/bin/
@@ -47,13 +47,13 @@ mv ErrorHandling.py /usr/local/bin/
 
 To run full pipeline:
 
-```bash
-./ContigExtractor.sh [-i \<fastq filename\>] [-r \<references filename\>] [-o \<output filename\>]
+```
+./ContigExtractor.sh [-i <fastq filename>] [-r <references filename>] [-o <output filename>]
 ```
 
 If you already ran Unicycler you can input the assembly files:
-```bash
-./ContigExtractor.sh [-i \<fastq filename\>] [-r \<references filename\>] [-o \<output filename\>] [-g \<Unicycler assembly.gfa\>] [-f \<Unicycler assembly.fasta\>]
+```
+./ContigExtractor.sh [-i <fastq filename>] [-r <references filename>] [-o <output filename>] [-g <Unicycler assembly.gfa>] [-f <Unicycler assembly.fasta>]
 ```
 
 ## Pipeline overview
