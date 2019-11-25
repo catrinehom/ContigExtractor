@@ -7,10 +7,16 @@ Step 5: This is the step 5 of the pipeline.
 Version: 1.0
 Author: Catrine Ahrens Høm
 """
+
+# Import libraries 
 import sys
 import re
 import gzip
 from argparse import ArgumentParser
+
+###########################################################################
+# FUNCTIONS
+###########################################################################
 
 def CheckGZip(filename):
     '''
@@ -36,8 +42,15 @@ def OpenFile(filename,mode):
         else:
             infile = open(filename,mode)   
     except IOError as error:
-        sys.exit('Can\'t open file, reason:',str(error),'\n') 
+        logfile.write('Could not open '+filename+' due to: '+str(error))
+        print('Could not open '+filename+' due to: '+str(error))
+        sys.exit(1)
     return infile
+
+
+###########################################################################
+# GET INPUT
+###########################################################################
 
 # Input from command line
 parser = ArgumentParser()
@@ -49,6 +62,13 @@ args = parser.parse_args()
 alignmentfrag = args.input
 o = args.o
 
+# Open log file
+logname = o+"/"+o+".log"
+logfile = OpenFile(logname,"a+") 
+
+###########################################################################
+# FIND IDS 
+###########################################################################
 
 # Define ID pattern
 #ID_pattern = b'[ATGC]+\t[0-9]+\t[0-9]+\t[0-9]+\t[0-9]+\t[a-zA-z0-9- .]*\t([a-zA-z0-9-=:]+)'
@@ -59,16 +79,6 @@ ID_pattern = re.compile(b'\s([\w-]+)\srunid=')
 
 # Open input file
 infile = OpenFile(alignmentfrag,'rb')
-
-# Open output file
-outfilename = o+'/'+o+'_ID.txt'
-
-try:
-    outfile = open(outfilename,'w')
-except IOError as error:
-    sys.stdout.write('Could not write file due to: '+str(error))
-    sys.exit(1)
-
 
 # Make a set of IDs to make sure they are unique
 ID_set = set()
@@ -82,6 +92,15 @@ for line in infile:
 # Check if any ID is found
 if not ID_set:
     print('No IDs found in '+o+alignmentfrag+'!')
+    logfile.write('No IDs found in '+o+alignmentfrag+'!')
+
+###########################################################################
+# WRITE RESULT TO FILE
+###########################################################################
+
+# Open output file
+outname = o+'/'+o+'_ID.txt'
+outfile = OpenFile(outname,'w')
 
 # Print ID to outfile        
 for ID in ID_set:       
@@ -90,4 +109,4 @@ for ID in ID_set:
 # Close files
 infile.close()            
 outfile.close()
-
+logfile.close()
