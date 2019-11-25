@@ -14,6 +14,10 @@ import os
 import gzip
 from argparse import ArgumentParser
 
+###########################################################################
+# FUNCTIONS
+###########################################################################
+
 def CheckGZip(filename):
     '''
     This function checks if the input file is gzipped.
@@ -88,14 +92,16 @@ def CheckFasta(filenames):
 # Parse input from command line 
 parser = ArgumentParser()
 parser.add_argument('-i', '--input', dest='input_fastq', help='Fastq file', nargs = '+')
-parser.add_argument('-r', '--reference', dest='db',help='References you want to examine', nargs = '+')
+parser.add_argument('-r', '--reference', dest='r',help='References you want to examine', nargs = '+')
 parser.add_argument('-g', dest='g',help='Unicycler assembly.gfa file')
+parser.add_argument('-o', '--output', dest='o', help='output filename')
 parser.add_argument('-f', dest='f',help='Unicycler assembly.fasta file')
 args = parser.parse_args()
 
 # Define input as variables
 input_fastq = args.input_fastq
-db = args.db
+r = args.r
+o = args.o
 
 if args.g:
     g = args.g
@@ -103,37 +109,58 @@ if args.g:
 if args.f:
     f = args.f
 
+# Open log file    
+logname = o+"/"+o+".log"
+logfile = OpenFile(logname,"a+")
+    
+###########################################################################
+# TEST INPUT
+###########################################################################
+
 # Test if fasta references and fastq files is exists in folder  
 for file in input_fastq:
     if os.path.exists(file) == False:
-        sys.exit('Input Error: '+file+' does not exist in path.')   
+        logfile.write('Input Error: '+file+' does not exist in path.')
+        print('Input Error: '+file+' does not exist in path.')
+        sys.exit(1)   
     
-for file in db: 
+for file in r: 
     if os.path.exists(file) == False:
-        sys.exit('Input Error: '+file+' does not exist in path.')
+        logfile.write('Input Error: '+file+' does not exist in path.')
+        print('Input Error: '+file+' does not exist in path.')
+        sys.exit(1)
     
 # Test if references and input files is correct format
-db_check_fasta = CheckFasta(db)
+r_check_fasta = CheckFasta(r)
 
 input_check_fasta = CheckFasta(input_fastq)
 input_check_fastq = CheckFastq(input_fastq)
 
 # References should be in fasta format
-for i in range(0,len(db_check_fasta)):
-    if db_check_fasta[i] is False:
-        sys.exit('Input Error: '+db[i]+' is a wrong format. Should be fasta format.')
+for i in range(0,len(r_check_fasta)):
+    if r_check_fasta[i] is False:
+        logfile.write('Input Error: '+r[i]+' is a wrong format. Should be fasta format.')
+        print('Input Error: '+r[i]+' is a wrong format. Should be fasta format.')
+        sys.exit(1)
 
 # Input data should be fastq format (or fasta? Forgot why I thought that would be an option)
 for i in range(0,len(input_check_fasta)):
     if input_check_fasta[i] is False and input_check_fastq[i] is False:
+        logfile.write(1)
+        print('Input Error: '+input_fastq[i]+' is a wrong format. Should be fastq or fasta format.')
         sys.exit('Input Error: '+input_fastq[i]+' is a wrong format. Should be fastq or fasta format.')
  
 # Test Unicycler input if given
 if args.g:
     if os.path.exists(g) == False:
-        sys.exit('Input Error: '+g+' does not exist in path.')
+        logfile.write('Input Error: '+g+' does not exist in path.')
+        print('Input Error: '+g+' does not exist in path.')
+        sys.exit(1)
+        
     if os.path.exists(f) == False:
-        sys.exit('Input Error: '+f+' does not exist in path.')
+        logfile.write('Input Error: '+f+' does not exist in path.')
+        print('Input Error: '+f+' does not exist in path.')
+        sys.exit(1)
     
 
     ### Check that the input is gfa and fasta
@@ -148,7 +175,8 @@ if args.g:
     
     # Check if fasta
     if first_char != fasta_type:
-        print('Error! Unknown format of input file: '+f+'. Should be fasta format')
+        logfile.write('Error! Unknown format of input file: '+f+'. Should be fasta format.')
+        print('Error! Unknown format of input file: '+f+'. Should be fasta format.')
         sys.exit(1)
     
     
@@ -159,9 +187,12 @@ if args.g:
     
     # Check if gfa
     if first_char != gfa_type:
+        logfile('Error! Unknown format of input file: '+g+'. Should be gfa format')
         print('Error! Unknown format of input file: '+g+'. Should be gfa format')
         sys.exit(1)
-    
+
+# Close files     
+logfile.close()
 
 '''
 #### SHOULD THIS BE AN OPTION???
@@ -171,6 +202,6 @@ if args.input is None:
     plasmidfile = input('Please choose a plasmid references to load: ')
 else:
     filename = args.input
-    plasmidfiles = args.db
+    plasmidfiles = args.r
 '''
 
