@@ -91,10 +91,10 @@ def CheckFasta(filenames):
 
 # Parse input from command line 
 parser = ArgumentParser()
-parser.add_argument('-i', '--input', dest='input_fastq', help='Fastq file', nargs = '+')
-parser.add_argument('-r', '--reference', dest='r',help='References you want to examine', nargs = '+')
+parser.add_argument('-i', dest='input_fastq', help='Fastq file', nargs = '+')
+parser.add_argument('-r', dest='r',help='References you want to map to', nargs = '+')
 parser.add_argument('-g', dest='g',help='Unicycler assembly.gfa file')
-parser.add_argument('-o', '--output', dest='o', help='output filename')
+parser.add_argument('-o', dest='o', help='Output filename')
 parser.add_argument('-f', dest='f',help='Unicycler assembly.fasta file')
 args = parser.parse_args()
 
