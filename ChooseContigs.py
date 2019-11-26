@@ -53,11 +53,11 @@ def OpenFile(filename,mode):
 
 # Parse input from command line 
 parser = ArgumentParser()
-parser.add_argument('-i', '--input', dest='input',help='assembly.gfa file', default='./assemblytest.gfa')
-parser.add_argument('-r', '--res', dest='res', help='result file from BLAST', default='./blast_result.out')
-parser.add_argument('-o', '--output', dest='o', help='output filename')
-parser.add_argument('-c', '--circular', dest='c', help='Exclude non-circular contigs', default=True)
-parser.add_argument('-l', '--length', dest='l', help='Max length of contigs', default=500000)
+parser.add_argument('-i', dest='input',help='Unicycler assembly.gfa file')
+parser.add_argument('-r', dest='res', help='Result file from BLAST')
+parser.add_argument('-o', dest='o', help='Output filename')
+parser.add_argument('-c', dest='c', help='Exclude non-circular contigs', default=True)
+parser.add_argument('-l', dest='l', help='Maximum length of contigs', default=500000)
 
 args = parser.parse_args()
 
@@ -66,7 +66,7 @@ filename = args.input
 resname = args.res
 o = args.o
 c = args.c
-l = args.l
+l = int(args.l)
 
 # Open log file
 logname = o+"/"+o+".log"
@@ -192,15 +192,27 @@ if bool(extracted_contigs) is False:
 # WRITE RESULT TO FILE
 ###########################################################################
 
+# Open output file 
+outname = o+'/assembled_contigs.fasta'
+#outfile = OpenFile(outname,'w')
+
+try:
+    outfile = open(outname,'w')
+except IOError as error:
+    sys.stdout.write('Could not open file due to: '+str(error))
+    sys.exit(1)
+
+
 # Open outfile
 #contigs_str = '_'.join(extracted_contigs) # If filename should reflect which contigs used?
 
-# Open output file 
-outname = o+'/assembled_contigs.fasta'
-outfile = OpenFile(outname,'w')
+
 
 # Print final contig with header to file
 for key in extracted_contigs:
+    print('Contig '+key+'matched the references and was under the requirements length='+str(l)+' and circular='+str(c))
+    logfile.write('Contig '+key+'matched the references and was under the requirements length='+str(l)+' and circular='+str(c))
+    
     print(headers[int(key)-1],file = outfile)
     print(extracted_contigs[key],file = outfile)
 
