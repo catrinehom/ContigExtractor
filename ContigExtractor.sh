@@ -14,25 +14,30 @@
 #This pipeline consists of 5 steps:
     ## STEP 1:  Unicycler (Skipped if assembly file is supplied)
     ## STEP 2:  Find the contigs which match references
-    ## STEP 3:  Choose this contig in fasta fragment
-    ## STEP 4:  KMA fragment against reads
-    ## STEP 5:  Find IDs and save to file
+    ## STEP 3:  Choose these contigs in fasta format
+    ## STEP 4:  Align fastq reads against contigs
+    ## STEP 5:  Find IDs for aligned fastq reads
 
 
 ###########################################################################
 # GET INPUT
 ###########################################################################
-# load an enviroment (to be deleted in final pipeline, this is up to user)
+# load an enviroment (to be deleted in final pipeline)
 source activate unicycler_v0.4.7_no_stall
 
-# Start timer
+# Start timer for logfile
 SECONDS=0
 
 # How to use program
-usage() { echo "Usage: $0 [-i <fastq filename>] [-r <references filename>] [-o <outputname>] [-g <Unicycler assembly.gfa] [-f assembly.fasta>]" 1>&2; exit 1; }
+usage() { echo "Usage: $0 [-i <fastq filename>] [-r <references filename>] [-o <outputname>] [-g <optional Unicycler assembly.gfa>] [-f <optional Unicycler assembly.fasta>]" 1>&2; exit 1; }
+
+# Default values
+t=8
+c='True'
+l=500000
 
 # Parse flags
-while getopts ":i:r:o:g:f:h" opt; do
+while getopts ":i:r:o:g:f:h:t:c:l" opt; do
     case "${opt}" in
         i)
             i=${OPTARG}
@@ -49,9 +54,21 @@ while getopts ":i:r:o:g:f:h" opt; do
         f)
             f=${OPTARG}
             ;;
-
+        t)
+            t=${OPTARG}
+            ;;
+        c)
+            c=${OPTARG}
+            ;;
+        l)
+            l=${OPTARG}
+            ;;
         h)
             usage
+            echo 'Optional flags:'
+            echo '-t threads for Unicycler, default=8'
+            echo '-c circular contigs output only, default="True"'
+            echo '-l length (maximum) of contigs, default=500000'
             ;;
         *)
             echo "Invalid option: ${OPTARG}"
@@ -69,7 +86,7 @@ fi
 
 
 # Make output directory
-[ -d $o ] && echo "Output directory: ${o} already exists. Files will be overwritten."|| mkdir $o
+[ -d $o ] && echo "Output directory: ${o} already exists. Files will be overwritten." || mkdir $o
 
 # Make logfile and empty it
 touch ${o}/${o}.log
@@ -112,19 +129,15 @@ if [ -z "${g}" ] || [ -z "${f}" ]; then
   echo "Starting STEP 1: Unicycler"
   echo "Starting STEP 1: Unicycler" >> ${o}/${o}.log
 
-  #Hardcoded, should maybe be flags
-  t=8
-  mem=24
-
   # Define output names
   u="/"$o".unicycler.nponly"
   g=$o$u"/assembly.gfa"
   f=$o$u"/assembly.fasta"
 
-  /srv/data/tools/git.repositories/Unicycler/unicycler-runner.py -t $t -l $i -o $o$u --keep 0
+  unicycler -t $t -l $i -o $o$u --keep 0
 
-  echo "$u is saved in current working directory."
-  echo "$u is saved in current working directory." >> ${o}/${o}.log
+  echo "$u created with assembly in fasta and gfa format."
+  echo "$u created with assembly in fasta and gfa format." >> ${o}/${o}.log
 else
     echo "STEP 1 is skipped due to already inputted Unicycler assembly."
     echo "Unicycler assembly used is ${g} and ${f}"
@@ -158,7 +171,7 @@ echo "Time stamp: $SECONDS seconds." >> ${o}/${o}.log
 echo "Starting STEP 3: Choose Contigs"
 echo "Starting STEP 3: Choose Contigs" >> ${o}/${o}.log
 
-./ChooseContigs.py -r $o/$res -i $g -o $o
+./ChooseContigs.py -r $o/$res -i $g -o $o -c $c -l $l
 
 # Check if python script exited with an error
 if [ $? -eq 0 ]
