@@ -4,8 +4,9 @@ ContigExtractor is a pipeline to find read ID's from contigs from Nanopore MinIO
 
 ## Requirements
 
-- KMA
-- Unicycler
+- [KMA](https://bitbucket.org/genomicepidemiology/kma/src/master/) 
+- [Unicycler](https://github.com/rrwick/Unicycler/) 
+- [BLAST+](https://www.ncbi.nlm.nih.gov/books/NBK279671/) 
 
 ## Installation
 
