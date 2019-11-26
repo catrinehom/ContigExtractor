@@ -54,8 +54,8 @@ def OpenFile(filename,mode):
 
 # Input from command line
 parser = ArgumentParser()
-parser.add_argument('-i', '--input', dest='input',help='Input file to find IDs from', default='./reads_alignment.frag.gz')
-parser.add_argument('-o', '--output', dest='o', help='output filename')
+parser.add_argument('-i', dest='input',help='Input file to find IDs from')
+parser.add_argument('-o', dest='o', help='Output filename')
 args = parser.parse_args()
 
 # Define input as variables
@@ -100,7 +100,14 @@ if not ID_set:
 
 # Open output file
 outname = o+'/'+o+'_ID.txt'
-outfile = OpenFile(outname,'w')
+#outfile = OpenFile(outname,'w')
+
+try:
+    outfile = open(outname,'w')
+except IOError as error:
+    sys.stdout.write('Could not open file due to: '+str(error))
+    sys.exit(1)
+    
 
 # Print ID to outfile        
 for ID in ID_set:       
