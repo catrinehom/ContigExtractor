@@ -27,6 +27,8 @@ source activate unicycler_v0.4.7_no_stall
 
 # Start timer for logfile
 SECONDS=0
+echo "Time stamp: $SECONDS seconds."
+echo "Time stamp: $SECONDS seconds." >> ${o}/${o}.log
 
 # How to use program
 usage() { echo "Usage: $0 [-i <fastq filename>] [-r <references filename>] [-o <outputname>] [-g <optional Unicycler assembly.gfa>] [-f <optional Unicycler assembly.fasta>]" 1>&2; exit 1; }
@@ -92,6 +94,15 @@ fi
 touch ${o}/${o}.log
 cat /dev/null > ${o}/${o}.log
 
+date=$(date '+%Y-%m-%d %H:%M:%S')
+echo "Starting Contig Extractor ($date)"
+echo "Starting Contig Extractor ($date)" >> ${o}/${o}.log
+echo "-----------------------------------------------"
+echo "-----------------------------------------------" >> ${o}/${o}.log
+echo "ContigExtractor is a pipeline to find read ID's from contigs from Nanopore MinION sequencing matching input references."
+echo "ContigExtractor is a pipeline to find read ID's from contigs from Nanopore MinION sequencing matching input references." >> ${o}/${o}.log
+echo ""
+echo "" >> ${o}/${o}.log
 
 # Check format and that the files exists
 if [ -z "${g}" ] || [ -z "${f}" ]; then
@@ -120,6 +131,8 @@ echo "References used is ${r}" >> ${o}/${o}.log
 
 echo "Time stamp: $SECONDS seconds."
 echo "Time stamp: $SECONDS seconds." >> ${o}/${o}.log
+echo ""
+echo "" >> ${o}/${o}.log
 
 ###########################################################################
 # STEP 1: Unicycler
@@ -147,6 +160,8 @@ fi
 
 echo "Time stamp: $SECONDS seconds."
 echo "Time stamp: $SECONDS seconds." >> ${o}/${o}.log
+echo ""
+echo "" >> ${o}/${o}.log
 
 ###########################################################################
 # STEP 2: FIND WANTED CONTGS
@@ -163,6 +178,8 @@ blastn -db $o/databases/$cdb -query $r -out $o/$res
 
 echo "Time stamp: $SECONDS seconds."
 echo "Time stamp: $SECONDS seconds." >> ${o}/${o}.log
+echo ""
+echo "" >> ${o}/${o}.log
 
 ###########################################################################
 # STEP 3: CHOOSE CONTIGS
@@ -187,6 +204,8 @@ fi
 
 echo "Time stamp: $SECONDS seconds."
 echo "Time stamp: $SECONDS seconds." >> ${o}/${o}.log
+echo ""
+echo "" >> ${o}/${o}.log
 
 ###########################################################################
 # STEP 4:  KMA READS AGAINST CONTIGS
@@ -203,6 +222,8 @@ kma -i $i -o $o/reads_alignment -t_db $o/databases/reads_database -mrs 0.1 -bcNa
 
 echo "Time stamp: $SECONDS seconds."
 echo "Time stamp: $SECONDS seconds." >> ${o}/${o}.log
+echo ""
+echo "" >> ${o}/${o}.log
 
 ###########################################################################
 # STEP 5:  FIND IDs
