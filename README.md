@@ -1,7 +1,7 @@
 # ContigExtractor
 
 ContigExtractor is a pipeline to find read ID's from contigs from Nanopore MinION sequencing matching input references. 
-Default options is to only include circular contigs (plasmids) and contigs under 500,000 bp. This can be changed, see section about optional flags below.
+Default options is to only include circular contigs (plasmids) and contigs under 500,000 bp. 
 
 ## Requirements
 
