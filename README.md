@@ -1,7 +1,7 @@
 # ContigExtractor
 
 ContigExtractor is a pipeline to find read ID's from contigs from Nanopore MinION sequencing matching input references. 
-Default options is to only include circular contig assemblies and contigs under 500,000 bp. 
+Default options is to only include ID's from circular contig assemblies and contigs under 500,000 bp. 
 
 ## Requirements
 
