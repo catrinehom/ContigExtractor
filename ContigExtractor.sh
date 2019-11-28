@@ -27,8 +27,6 @@ source activate unicycler_v0.4.7_no_stall
 
 # Start timer for logfile
 SECONDS=0
-echo "Time stamp: $SECONDS seconds."
-echo "Time stamp: $SECONDS seconds." >> ${o}/${o}.log
 
 # How to use program
 usage() { echo "Usage: $0 [-i <fastq filename>] [-r <references filename>] [-o <outputname>] [-g <optional Unicycler assembly.gfa>] [-f <optional Unicycler assembly.fasta>]" 1>&2; exit 1; }
