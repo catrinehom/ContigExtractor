@@ -216,7 +216,7 @@ echo "Starting STEP 4: KMA reads against contigs." >> ${o}/${o}.log
 kma index -i $o/assembled_contigs.fasta -o $o/databases/reads_database
 
 #Command to run KMA:
-kma -i $i -o $o/reads_alignment -t_db $o/databases/reads_database -mrs 0.1 -bcNano -mp 20 -mem_mode
+kma -i $i -o $o/reads_alignment -t_db $o/databases/reads_database -mrs 0.0 -bcNano -mp 20 -mem_mode
 
 echo "Time stamp: $SECONDS seconds."
 echo "Time stamp: $SECONDS seconds." >> ${o}/${o}.log
