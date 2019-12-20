@@ -60,7 +60,7 @@ If you already ran Unicycler you can input the assembly files:
 
 ### Optional flags
 ```
--t threads for Unicycler, default=8
+-t threads for Unicycler and kma, default=8
 -c circular contigs output only, default='True'
 -l length (maximum) of contigs, default=500000
 ```
