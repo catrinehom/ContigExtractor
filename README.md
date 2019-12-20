@@ -67,4 +67,4 @@ If you already ran Unicycler you can input the assembly files:
 
 ## Pipeline overview
 
-![alt text](https://github.com/catrinehom/ContigIdentifyer/blob/master/SSI_pipeline_overview.png)
+![alt text](https://github.com/catrinehom/ContigIdentifyer/blob/master/ContigExtractor.png)
