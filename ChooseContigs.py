@@ -8,56 +8,23 @@ Version: 1.0
 Author: Catrine Ahrens Høm
 """
 
-# Import libraries 
+# Import libraries
 import sys
 import re
-import gzip
 from argparse import ArgumentParser
-
-###########################################################################
-# FUNCTIONS
-###########################################################################
-
-def CheckGZip(filename):
-    '''
-    This function checks if the input file is gzipped.
-    '''
-    gzipped_type = b'\x1f\x8b'
-    
-    infile = open(filename,'rb')
-    filetype = infile.read(2)
-    infile.close()
-    if filetype == gzipped_type:
-        return True
-    else:
-        return False
-    
-def OpenFile(filename,mode):
-    '''
-    This function opens the input file in chosen mode.
-    '''
-    try:
-        if CheckGZip(filename):
-            infile = gzip.open(filename,mode) 
-        else:
-            infile = open(filename,mode)   
-    except IOError as error:
-        logfile.write('Could not open '+filename+' due to: '+str(error))
-        print('Could not open '+filename+' due to: '+str(error))
-        sys.exit(1)
-    return infile
+from ErrorHandling import OpenFile
 
 ###########################################################################
 # GET INPUT
 ###########################################################################
 
-# Parse input from command line 
+# Parse input from command line
 parser = ArgumentParser()
-parser.add_argument('-i', dest='input',help='Unicycler assembly.gfa file')
-parser.add_argument('-r', dest='res', help='Result file from BLAST')
-parser.add_argument('-o', dest='o', help='Output filename')
-parser.add_argument('-c', dest='c', help='Exclude non-circular contigs', default=True)
-parser.add_argument('-l', dest='l', help='Maximum length of contigs', default=500000)
+parser.add_argument("-i", dest="input",help="Unicycler assembly.gfa file")
+parser.add_argument("-r", dest="res", help="Result file from BLAST")
+parser.add_argument("-o", dest="o", help="Output filename")
+parser.add_argument("-c", dest="c", help="Exclude non-circular contigs", action="store_true")
+parser.add_argument("-l", dest="l", help="Maximum length of contigs", default=500000, type=int)
 
 args = parser.parse_args()
 
@@ -66,58 +33,60 @@ filename = args.input
 resname = args.res
 o = args.o
 c = args.c
-l = int(args.l)
+l = args.l
 
 # Open log file
-logname = o+"/"+o+".log"
+logname = "{}/{}.log".format(o, o)
 logfile = OpenFile(logname,"a+")
 
-# Open input files   
-infile = OpenFile(filename,'r') 
-resfile = OpenFile(resname,'r')
-    
-    
+# Open input files
+infile = OpenFile(filename,"r")
+resfile = OpenFile(resname,"r")
+
+
 ###########################################################################
 # MAKE HEADERS
 ###########################################################################
 
-# Define pattern for information (length, depth, circular) for header 
-Header_gfa_pattern = r'S\t([0-9]*)\t[ATGC]*\tLN:i:([0-9]*)\tdp:f:([0-9.]*)'
-#Header_fsa_pattern = r'>([0-9]*)'
-Circular_pattern = r'L[\t ]*([0-9]*)[\t ]*[+-][\t ]*([0-9]*)[\t ]*[+-][\t ]*[0-9A-Z]*'
+# Define pattern for information (length, depth, circular) for header
+header_gfa_pattern = r"S\t([0-9]*)\t[ATGC]*\tLN:i:([0-9]*)\tdp:f:([0-9.]*)"
+circular_pattern = r"L[\t ]*([0-9]*)[\t ]*[+-][\t ]*([0-9]*)[\t ]*[+-][\t ]*[0-9A-Z]*"
 
 # Define variables
-Circular_contig = set()
+circular_contig = set()
 contignumber = list()
 length = list()
 depth = list()
-Circular = list()
+circular = list()
 
 # Search for information (length, depth, circular) in gfa file
 for line in infile:
-    Header_gfa_result = re.search(Header_gfa_pattern,line)       
-    if Header_gfa_result != None: 
+    Header_gfa_result = re.search(header_gfa_pattern,line)
+    if Header_gfa_result is not None:
         contignumber.append(Header_gfa_result.group(1))
         length.append(Header_gfa_result.group(2))
         depth.append(Header_gfa_result.group(3))
-          
-    Circular_result = re.search(Circular_pattern,line)
-    if Circular_result != None:
-        if Circular_result.group(1) == Circular_result.group(2):
-            Circular_contig.add(Circular_result.group(1))
 
-# Make list of yes/no for each contigs depending on circular information          
+    circular_result = re.search(circular_pattern,line)
+    if circular_result is not None:
+        if circular_result.group(1) == circular_result.group(2):
+            circular_contig.add(int(circular_result.group(1)))
+
+# Close file
+infile.close()
+
+# Make list of yes/no for each contigs depending on circular information
 for i in range(1,len(contignumber)+1):
-    if str(i) in Circular_contig:
-        Circular.append('Yes')
+    if i in circular_contig:
+        circular.append("Yes")
     else:
-        Circular.append('No')
-          
-# Make final headers        
+        circular.append("No")
+
+# Make final headers
 headers = list()
 for i in range(0,len(contignumber)):
-    headers.append('>Contig'+contignumber[i]+' length='+length[i]+' depth='+depth[i]+' circular='+Circular[i])
-    
+    headers.append(">Contig{} length={} depth={} circular={}".format(contignumber[i], length[i], depth[i], circular[i]))
+
 ###########################################################################
 # CHOOSE CONTIGS
 ###########################################################################
@@ -127,97 +96,93 @@ matching_contigs = list()
 
 # Look for contig matches in resfile
 for line in resfile:
-    if line.startswith('>'):
+    if line.startswith(">"):
         matching_contigs.append(line.split()[0][1::])
 
+# Close file
+resfile.close()
 
-# Remove empty in contigs
-#while("" in matching_contigs): 
-#    matching_contigs.remove("")
-        
-    
-contig_gfa_pattern = r'S\t([0-9]*)\t([ATGC]*)'
-#contig_fsa_pattern = r'>([0-9]*)'
+# Define gfa pattern
+contig_gfa_pattern = r"S\t([0-9]*)\t([ATGC]*)"
 
-# Define dict
+# Define variables
 extracted_contigs = dict()
-   
+
 # Open input file again
-infile = OpenFile(filename,'r') 
- 
+infile = OpenFile(filename,"r")
+
 # Extract contigs in the gfa file
 for line in infile:
     contig_gfa_result = re.search(contig_gfa_pattern,line)
-    if contig_gfa_result != None: 
+    if contig_gfa_result is not None:
         if contig_gfa_result.group(1) in matching_contigs:
             extracted_contigs[contig_gfa_result.group(1)] = contig_gfa_result.group(2)
 
+# Close file
+infile.close()
+
 # Check if contigs is found
-if bool(extracted_contigs) is False:
-    print('Error! No contigs is found matching your reference.')
-    logfile.write('Error! No contigs is found matching your reference.')
-    sys.exit(1)
-           
+if not extracted_contigs:
+    message = "Error! No contigs is found matching your reference."
+    logfile.write(message)
+    sys.exit(message)
+
 ###########################################################################
 # FILTER CONTIGS
 ###########################################################################
 
-# Check if it is circular (if flag is true) and over specified length (defalut = 500.000 bp)
-keys_to_delete = set() 
+# Check if it is circular (if flag is true) and over specified length (default = 500.000 bp)
+keys_to_delete = set()
 
 for key in extracted_contigs:
     num = int(key)-1
     if c:
-        if key not in Circular_contig:
-            print('Contig '+key+' is not circular! It is therefore excluded even though it matched the database.')
-            logfile.write('Contig '+key+' is not circular! It is therefore excluded even though it matched the database.')
+        if key not in circular_contig:
+            message = "Contig{} is not circular! It is therefore excluded even though it matched the database.\n".format(key)
+            print(message)
+            logfile.write(message)
             keys_to_delete.add(key)
     if int(length[num]) > l:
-        print('Contig '+key+' is over '+str(l)+'bp long! It is therefore excluded even though it matched the database.')
-        logfile.write('Contig '+key+' is over '+str(l)+'bp long! It is therefore excluded even though it matched the database.')
+        message = "Contig{} is over {} bp long! It is therefore excluded even though it matched the database.\n".format(key, l)
+        print(message)
+        logfile.write(message)
         keys_to_delete.add(key)
 
 # Delete keys that are not circular and over specified length (default = 500.000 bp)
 for key in keys_to_delete:
     del extracted_contigs[key]
-    
+
 # Check if any contigs is left after requirement filtering
-if bool(extracted_contigs) is False:
-    print('Error! No contigs is found Error! No contigs is found matching your reference with requirements length='+str(l)+' and circular='+str(c))
-    logfile.write('Error! No contigs is found Error! No contigs is found matching your reference with requirements length='+str(l)+' and circular='+str(c))
-    sys.exit(1)
- 
+if extracted_contigs:
+    message = "Error! No contigs is found Error! No contigs is found matching your reference with requirements length={} and circular={}. \n".format(l, c)
+    logfile.write(message)
+    sys.exit(message)
+
 
 ###########################################################################
 # WRITE RESULT TO FILE
 ###########################################################################
 
-# Open output file 
-outname = o+'/assembled_contigs.fasta'
-#outfile = OpenFile(outname,'w')
+# Open output file
+outname = "{}/assembled_contigs.fasta".format(o)
 
 try:
-    outfile = open(outname,'w')
+    outfile = open(outname,"w")
 except IOError as error:
-    sys.stdout.write('Could not open file due to: '+str(error))
-    sys.exit(1)
-
-
-# Open outfile
-#contigs_str = '_'.join(extracted_contigs) # If filename should reflect which contigs used?
-
+    message = "Could not open file due to: {}".format(error)
+    logfile.write(message)
+    sys.exit(message)
 
 
 # Print final contig with header to file
 for key in extracted_contigs:
-    print('Contig '+key+'matched the references and was under the requirements length='+str(l)+' and circular='+str(c))
-    logfile.write('Contig '+key+'matched the references and was under the requirements length='+str(l)+' and circular='+str(c))
-    
+    message = "Contig{} matched the references and was under the requirements length={} and circular={}. \n".format(key, l, c)
+    print(message)
+    logfile.write(message)
+
     print(headers[int(key)-1],file = outfile)
     print(extracted_contigs[key],file = outfile)
 
-# Close files    
-infile.close()
-resfile.close()
+# Close files
 outfile.close()
 logfile.close()
