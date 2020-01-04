@@ -27,7 +27,7 @@ def CheckGZip(filename):
     infile = open(filename,"rb")
     filetype = infile.read(2)
     infile.close()
-    if filetype == gzipped_type:
+    if filetype is gzipped_type:
         return True
     else:
         return False
@@ -59,7 +59,7 @@ def CheckFastq(filenames):
         first_char = f.read(1);
         f.close()
         # Check if fastq
-        if first_char == fastq_type:
+        if first_char is fastq_type:
             fastq.append(True)
         else:
             fastq.append(False)
@@ -79,7 +79,7 @@ def CheckFasta(filenames):
         first_char = f.read(1);
         f.close()
         # Check if fasta
-        if first_char == fasta_type:
+        if first_char is fasta_type:
             fasta.append(True)
         else:
             fasta.append(False)
@@ -89,25 +89,26 @@ def CheckFasta(filenames):
 # GET INPUT
 ###########################################################################
 
-# Parse input from command line
-parser = ArgumentParser()
-parser.add_argument("-i", dest="input_fastq", help="Fastq file", nargs = "+")
-parser.add_argument("-r", dest="r",help="References you want to map to", nargs = "+")
-parser.add_argument("-g", dest="g",help="Unicycler assembly.gfa file")
-parser.add_argument("-o", dest="o", help="Output filename")
-parser.add_argument("-f", dest="f",help="Unicycler assembly.fasta file")
-args = parser.parse_args()
+if __name__ == '__main__':
+    # Parse input from command line
+    parser = ArgumentParser()
+    parser.add_argument("-i", dest="input_fastq", help="Fastq file", nargs = "+")
+    parser.add_argument("-r", dest="r",help="References you want to map to", nargs = "+")
+    parser.add_argument("-g", dest="g",help="Unicycler assembly.gfa file")
+    parser.add_argument("-o", dest="o", help="Output filename")
+    parser.add_argument("-f", dest="f",help="Unicycler assembly.fasta file")
+    args = parser.parse_args()
 
-# Define input as variables
-input_fastq = args.input_fastq
-r = args.r
-o = args.o
+    # Define input as variables
+    input_fastq = args.input_fastq
+    r = args.r
+    o = args.o
 
-if args.g:
-    g = args.g
+    if args.g:
+        g = args.g
 
-if args.f:
-    f = args.f
+    if args.f:
+        f = args.f
 
 # Open log file
 logname = "{}/{}.log".format(o, o)
@@ -119,12 +120,12 @@ logfile = OpenFile(logname,"a+")
 
 # Test if fasta references and fastq files is exists in folder
 for file in input_fastq:
-    if os.path.exists(file) == False:
+    if os.path.exists(file) is False:
         logfile.write("Input Error: {} does not exist in path.".format(file))
         sys.exit("Input Error: {} does not exist in path.".format(file))
 
 for file in r:
-    if os.path.exists(file) == False:
+    if os.path.exists(file) is False:
         message = "Input Error: {} does not exist in path.".format(file)
         logfile.write(message)
         sys.exit(message)
@@ -151,12 +152,12 @@ for i in range(0,len(input_check_fasta)):
 
 # Test Unicycler input if given
 if args.g:
-    if os.path.exists(g) == False:
+    if os.path.exists(g) is False:
         message = "Input Error: {} does not exist in path.".format(g)
         logfile.write(message)
         sys.exit(message)
 
-    if os.path.exists(f) == False:
+    if os.path.exists(f) is False:
         message = "Input Error: {} does not exist in path.".format(f)
         logfile.write(message)
         sys.exit(message)
