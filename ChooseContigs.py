@@ -64,13 +64,13 @@ circular = list()
 # Search for information (length, depth, circular) in gfa file
 for line in infile:
     Header_gfa_result = re.search(header_gfa_pattern,line)
-    if Header_gfa_result is not None:
+    if Header_gfa_result != None:
         contignumber.append(Header_gfa_result.group(1))
         length.append(Header_gfa_result.group(2))
         depth.append(Header_gfa_result.group(3))
 
     circular_result = re.search(circular_pattern,line)
-    if circular_result is not None:
+    if circular_result != None:
         if circular_result.group(1) is circular_result.group(2):
             circular_contig.add(int(circular_result.group(1)))
 
@@ -116,7 +116,7 @@ infile = OpenFile(filename,"r")
 # Extract contigs in the gfa file
 for line in infile:
     contig_gfa_result = re.search(contig_gfa_pattern,line)
-    if contig_gfa_result is not None:
+    if contig_gfa_result != None:
         if contig_gfa_result.group(1) in matching_contigs:
             extracted_contigs[contig_gfa_result.group(1)] = contig_gfa_result.group(2)
 
