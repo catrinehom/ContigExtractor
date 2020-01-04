@@ -59,7 +59,7 @@ def CheckFastq(filenames):
         first_char = f.read(1);
         f.close()
         # Check if fastq
-        if first_char is fastq_type:
+        if first_char == fastq_type:
             fastq.append(True)
         else:
             fastq.append(False)
@@ -79,7 +79,7 @@ def CheckFasta(filenames):
         first_char = f.read(1);
         f.close()
         # Check if fasta
-        if first_char is fasta_type:
+        if first_char == fasta_type:
             fasta.append(True)
         else:
             fasta.append(False)
@@ -120,12 +120,12 @@ logfile = OpenFile(logname,"a+")
 
 # Test if fasta references and fastq files is exists in folder
 for file in input_fastq:
-    if os.path.exists(file) is False:
+    if os.path.exists(file) == False:
         logfile.write("Input Error: {} does not exist in path.".format(file))
         sys.exit("Input Error: {} does not exist in path.".format(file))
 
 for file in r:
-    if os.path.exists(file) is False:
+    if os.path.exists(file) == False:
         message = "Input Error: {} does not exist in path.".format(file)
         logfile.write(message)
         sys.exit(message)
@@ -138,26 +138,26 @@ input_check_fastq = CheckFastq(input_fastq)
 
 # References should be in fasta format
 for i in range(0,len(r_check_fasta)):
-    if r_check_fasta[i] is False:
+    if r_check_fasta[i] == False:
         message = "Input Error: {} is a wrong format. Should be fasta format.".format(r[i])
         logfile.write(message)
         sys.exit(message)
 
 # Input data should be fastq or fasta format
 for i in range(0,len(input_check_fasta)):
-    if input_check_fasta[i] is False and input_check_fastq[i] is False:
+    if input_check_fasta[i] == False and input_check_fastq[i] == False:
         message = "Input Error: {} is a wrong format. Should be fastq or fasta format.".format(input_fastq[i])
         logfile.write(message)
         sys.exit(message)
 
 # Test Unicycler input if given
 if args.g:
-    if os.path.exists(g) is False:
+    if os.path.exists(g) == False:
         message = "Input Error: {} does not exist in path.".format(g)
         logfile.write(message)
         sys.exit(message)
 
-    if os.path.exists(f) is False:
+    if os.path.exists(f) == False:
         message = "Input Error: {} does not exist in path.".format(f)
         logfile.write(message)
         sys.exit(message)
@@ -174,7 +174,7 @@ if args.g:
     file.close()
 
     # Check if fasta
-    if first_char is not fasta_type:
+    if first_char != fasta_type:
         message = "Error! Unknown format of input file: {}. Should be fasta format.".format(f)
         logfile.write(message)
         sys.exit(message)
@@ -186,7 +186,7 @@ if args.g:
     file.close()
 
     # Check if gfa
-    if first_char is not gfa_type:
+    if first_char != gfa_type:
         message = "Error! Unknown format of input file: {}. Should be gfa format".format(g)
         logfile(message)
         sys.exit(message)
