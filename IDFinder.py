@@ -50,7 +50,7 @@ ID_set = set()
 # Search after ID and write dict
 for line in infile:
     ID_result = re.search(ID_pattern,line)
-    if ID_result is not None:
+    if ID_result != None:
         ID_set.add(ID_result.group(1))
 
 # Close file
