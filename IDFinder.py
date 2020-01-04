@@ -29,58 +29,58 @@ if __name__ == '__main__':
     alignmentfrag = args.input
     o = args.o
 
-# Open log file
-logname = "{}/{}.log".format(o, o)
-logfile = OpenFile(logname,"a+")
+    # Open log file
+    logname = "{}/{}.log".format(o, o)
+    logfile = OpenFile(logname,"a+")
 
 ###########################################################################
 # FIND IDS
 ###########################################################################
 
-# Define ID pattern
-ID_pattern = re.compile(b"\s([\w-]+)\srunid=")
+    # Define ID pattern
+    ID_pattern = re.compile(b"\s([\w-]+)\srunid=")
 
 
-# Open input file
-infile = OpenFile(alignmentfrag,"rb")
+    # Open input file
+    infile = OpenFile(alignmentfrag,"rb")
 
-# Make a set of IDs to make sure they are unique
-ID_set = set()
+    # Make a set of IDs to make sure they are unique
+    ID_set = set()
 
-# Search after ID and write dict
-for line in infile:
-    ID_result = re.search(ID_pattern,line)
-    if ID_result != None:
-        ID_set.add(ID_result.group(1))
+    # Search after ID and write dict
+    for line in infile:
+        ID_result = re.search(ID_pattern,line)
+        if ID_result != None:
+            ID_set.add(ID_result.group(1))
 
-# Close file
-infile.close()
+    # Close file
+    infile.close()
 
-# Check if any ID is found
-if not ID_set:
-    message = "No IDs found in {}{}!",format(o, alignmentfrag)
-    logfile.write(message)
-    sys.exit(message)
+    # Check if any ID is found
+    if not ID_set:
+        message = "No IDs found in {}{}!",format(o, alignmentfrag)
+        logfile.write(message)
+        sys.exit(message)
 
 ###########################################################################
 # WRITE RESULT TO FILE
 ###########################################################################
 
-# Open output file
-outname = "{}/{}_ID.txt".format(o,o)
+    # Open output file
+    outname = "{}/{}_ID.txt".format(o,o)
 
-try:
-    outfile = open(outname,"w")
-except IOError as error:
-    message = "Could not open file due to: ".format(error)
-    logfile.write(message)
-    sys.exit(message)
+    try:
+        outfile = open(outname,"w")
+    except IOError as error:
+        message = "Could not open file due to: ".format(error)
+        logfile.write(message)
+        sys.exit(message)
 
 
-# Print ID to outfile
-for ID in ID_set:
-    print(ID.decode("ascii"), file=outfile)
+    # Print ID to outfile
+    for ID in ID_set:
+        print(ID.decode("ascii"), file=outfile)
 
-# Close files
-outfile.close()
-logfile.close()
+    # Close files
+    outfile.close()
+    logfile.close()
