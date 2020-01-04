@@ -18,15 +18,16 @@ from ErrorHandling import OpenFile
 # GET INPUT
 ###########################################################################
 
-# Input from command line
-parser = ArgumentParser()
-parser.add_argument("-i", dest="input", help="Input file to find IDs from")
-parser.add_argument("-o", dest="o", help="Output filename")
-args = parser.parse_args()
+if __name__ == '__main__':
+    # Input from command line
+    parser = ArgumentParser()
+    parser.add_argument("-i", dest="input", help="Input file to find IDs from")
+    parser.add_argument("-o", dest="o", help="Output filename")
+    args = parser.parse_args()
 
-# Define input as variables
-alignmentfrag = args.input
-o = args.o
+    # Define input as variables
+    alignmentfrag = args.input
+    o = args.o
 
 # Open log file
 logname = "{}/{}.log".format(o, o)
