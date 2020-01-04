@@ -85,7 +85,6 @@ if [ -z "${i}" ] || [ -z "${r}" ] || [ -z "${o}" ]; then
     usage
 fi
 
-
 # Make output directory
 [ -d $o ] && echo "Output directory: ${o} already exists. Files will be overwritten."  | tee -a $log || mkdir $o
 
@@ -169,7 +168,7 @@ echo "" | tee -a $log
 
 echo "Starting STEP 3: Choose Contigs" | tee -a $log
 
-./ChooseContigs.py -r $o/$res -i $g -o $o -c -l $l
+./ChooseContigs.py -r $o/$res -i $g -o $o -c $c -l $l
 
 # Check if python script exited with an error
 if [ $? -eq 0 ]
@@ -193,7 +192,7 @@ echo "Starting STEP 4: KMA reads against contigs." | tee -a $log
 kma index -i $o/assembled_contigs.fasta -o $o/databases/reads_database
 
 #Command to run KMA:
-kma -i $i -o $o/reads_alignment -t_db $o/databases/reads_database -mrs 0.7 -bcNano -mp 20 -mem_mode -t $t -1t1
+kma -i $i -o $o/reads_alignment -t_db $o/databases/reads_database -mrs 0.5 -bcNano -mp 20 -mem_mode -t $t -1t1
 
 echo "Time stamp: $SECONDS seconds." | tee -a $log
 echo "" | tee -a $log
