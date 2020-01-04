@@ -7,12 +7,12 @@
 
 #Usage:
     ## ./ContigExtractor.sh [-i <fastq filename>] [-r <references filename>] [-o <outputname>] [-g <optional Unicycler assembly.gfa>] [-f <optional Unicycler assembly.fasta>]
-    ## -i, fastq path
-    ## -r, reference path
-    ## -t, threads for Unicycler, default=8
+    ## -i, fastq file path
+    ## -r, reference file path
+    ## -t, threads for Unicycler and kma, default=8
     ## -c circular contigs output only, default="True"
     ## -l length (maximum) of contigs, default=500000
-    ## ID.txt will be available in the working directory after run.
+    ## An ID list will be available after succesfull run.
 
 #This pipeline consists of 5 steps:
     ## STEP 1:  Unicycler (Skipped if assembly file is supplied)
@@ -69,7 +69,7 @@ while getopts ":i:r:o:g:f:h:t:c:l" opt; do
             echo "Optional flags:"
             echo "-t threads for Unicycler, default=8"
             echo "-c circular contigs output only, default='True'"
-            echo "-l length (maximum) of contigs, default=500000"
+            echo "-l maximum length of contigs, default=500000"
             ;;
         *)
             echo "Invalid option: ${OPTARG}"
@@ -87,17 +87,18 @@ fi
 
 
 # Make output directory
-[ -d $o ] && echo "Output directory: ${o} already exists. Files will be overwritten."  | tee -a ${o}/${o}.log || mkdir $o
+[ -d $o ] && echo "Output directory: ${o} already exists. Files will be overwritten."  | tee -a $log || mkdir $o
 
 # Make logfile and empty it
-touch ${o}/${o}.log
-cat /dev/null > ${o}/${o}.log
+log=${o}/${o}.log
+touch $log
+cat /dev/null > $log
 
 date=$(date "+%Y-%m-%d %H:%M:%S")
-echo "Starting ContigExtractor ($date)" | tee -a ${o}/${o}.log
-echo "-----------------------------------------------" | tee -a ${o}/${o}.log
-echo "ContigExtractor is a pipeline to find read ID's from contigs from Nanopore MinION sequencing matching input references." | tee -a ${o}/${o}.log
-echo "" | tee -a ${o}/${o}.log
+echo "Starting ContigExtractor ($date)" | tee -a $log
+echo "-----------------------------------------------" | tee -a $log
+echo "ContigExtractor is a pipeline to find read ID's from contigs from Nanopore MinION sequencing matching input references." | tee -a $log
+echo "" | tee -a $log
 
 # Check format and that the files exists
 if [ -z "${g}" ] || [ -z "${f}" ]; then
@@ -109,26 +110,26 @@ fi
 # Check if python script exited with an error
 if [ $? -eq 0 ]
 then
-  echo "Error handling of input done." | tee -a ${o}/${o}.log
+  echo "Error handling of input done." | tee -a $log
 else
   # Redirect stdout from echo command to stderr.
-  echo "Script exited due to input error." | tee -a ${o}/${o}.log
+  echo "Script exited due to input error." | tee -a $log
   exit 1
 fi
 
 # Print files used
-echo "Input used is ${i}" | tee -a ${o}/${o}.log
-echo "References used is ${r}" | tee -a ${o}/${o}.log
+echo "Input used is ${i}" | tee -a $log
+echo "References used is ${r}" | tee -a $log
 
-echo "Time stamp: $SECONDS seconds." | tee -a ${o}/${o}.log
-echo "" | tee -a ${o}/${o}.log
+echo "Time stamp: $SECONDS seconds." | tee -a $log
+echo "" | tee -a $log
 
 ###########################################################################
 # STEP 1: Unicycler
 ###########################################################################
 # Run only Unicycler if no input is given
 if [ -z "${g}" ] || [ -z "${f}" ]; then
-  echo "Starting STEP 1: Unicycler" | tee -a ${o}/${o}.log
+  echo "Starting STEP 1: Unicycler" | tee -a $log
 
   # Define output names
   u="/"$o".unicycler.nponly"
@@ -137,20 +138,20 @@ if [ -z "${g}" ] || [ -z "${f}" ]; then
 
   unicycler -t $t -l $i -o $o$u --keep 0
 
-  echo "$u created with assembly in fasta and gfa format." | tee -a ${o}/${o}.log
+  echo "$u created with assembly in fasta and gfa format." | tee -a $log
 else
-    echo "STEP 1 is skipped due to already inputted Unicycler assembly." | tee -a ${o}/${o}.log
-    echo "Unicycler assembly used is ${g} and ${f}" | tee -a ${o}/${o}.log
+    echo "STEP 1 is skipped due to already inputted Unicycler assembly." | tee -a $log
+    echo "Unicycler assembly used is ${g} and ${f}" | tee -a $log
 fi
 
-echo "Time stamp: $SECONDS seconds." | tee -a ${o}/${o}.log
-echo "" | tee -a ${o}/${o}.log
+echo "Time stamp: $SECONDS seconds." | tee -a $log
+echo "" | tee -a $log
 
 ###########################################################################
 # STEP 2: FIND WANTED CONTGS
 ###########################################################################
 
-echo "Starting STEP 2: Find wanted contigs" | tee -a ${o}/${o}.log
+echo "Starting STEP 2: Find wanted contigs" | tee -a $log
 
 cdb="contigs_database"
 res="blast_results.out"
@@ -158,59 +159,59 @@ mkdir $o/databases
 makeblastdb -in $f -parse_seqids -title $cdb -dbtype nucl -out $o/databases/$cdb
 blastn -db $o/databases/$cdb -query $r -out $o/$res
 
-echo "blast_results.out created with information on contigs aligning with references." | tee -a ${o}/${o}.log
-echo "Time stamp: $SECONDS seconds." | tee -a ${o}/${o}.log
-echo "" | tee -a ${o}/${o}.log
+echo "blast_results.out created with information on contigs aligning with references." | tee -a $log
+echo "Time stamp: $SECONDS seconds." | tee -a $log
+echo "" | tee -a $log
 
 ###########################################################################
 # STEP 3: CHOOSE CONTIGS
 ###########################################################################
 
-echo "Starting STEP 3: Choose Contigs" | tee -a ${o}/${o}.log
+echo "Starting STEP 3: Choose Contigs" | tee -a $log
 
 ./ChooseContigs.py -r $o/$res -i $g -o $o -c -l $l
 
 # Check if python script exited with an error
 if [ $? -eq 0 ]
 then
-  echo "Contig(s) identified in input file." | tee -a ${o}/${o}.log
+  echo "Contig(s) identified in input file." | tee -a $log
 else
-  echo "Script exited due to error." | tee -a ${o}/${o}.log
+  echo "Script exited due to error." | tee -a $log
   exit 1
 fi
 
-echo "Time stamp: $SECONDS seconds." | tee -a ${o}/${o}.log
-echo "" | tee -a ${o}/${o}.log
+echo "Time stamp: $SECONDS seconds." | tee -a $log
+echo "" | tee -a $log
 
 ###########################################################################
 # STEP 4:  KMA READS AGAINST CONTIGS
 ###########################################################################
 
-echo "Starting STEP 4: KMA reads against contigs." | tee -a ${o}/${o}.log
+echo "Starting STEP 4: KMA reads against contigs." | tee -a $log
 
 #Command used to index plasmid database:
 kma index -i $o/assembled_contigs.fasta -o $o/databases/reads_database
 
 #Command to run KMA:
-kma -i $i -o $o/reads_alignment -t_db $o/databases/reads_database -mrs 0.7 -bcNano -mp 20 -mem_mode -t $t
+kma -i $i -o $o/reads_alignment -t_db $o/databases/reads_database -mrs 0.7 -bcNano -mp 20 -mem_mode -t $t -1t1
 
-echo "Time stamp: $SECONDS seconds." | tee -a ${o}/${o}.log
-echo "" | tee -a ${o}/${o}.log
+echo "Time stamp: $SECONDS seconds." | tee -a $log
+echo "" | tee -a $log
 
 ###########################################################################
 # STEP 5:  FIND IDs
 ###########################################################################
 
-echo "Starting STEP 5: Find IDs" | tee -a ${o}/${o}.log
+echo "Starting STEP 5: Find IDs" | tee -a $log
 
 ./IDFinder.py -i $o/reads_alignment.frag.gz -o $o
 
 # Check if python script exited with an error
 if [ $? -eq 0 ]
 then
-  echo "IDs found! ${o}_ID.txt is saved in ${o} directory." | tee -a ${o}/${o}.log
+  echo "IDs found! ${o}_ID.txt is saved in ${o} directory." | tee -a $log
 else
-  echo "No IDs found!" | tee -a ${o}/${o}.log
+  echo "No IDs found!" | tee -a $log
 fi
 
-echo "Time stamp: $SECONDS seconds." | tee -a ${o}/${o}.log
+echo "Time stamp: $SECONDS seconds." | tee -a $log
