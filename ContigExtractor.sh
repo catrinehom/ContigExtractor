@@ -101,9 +101,9 @@ echo "" | tee -a $log
 
 # Check format and that the files exists
 if [ -z "${g}" ] || [ -z "${f}" ]; then
-  ./ErrorHandling.py -i $i -r $r -o $o
+  ./ErrorHandling.py -i $i -r $r -o $o -c $c -l $l
 else
-  ./ErrorHandling.py -i $i -r $r -o $o -g $g -f $f
+  ./ErrorHandling.py -i $i -r $r -o $o -g $g -f $f -c $c -l $l
 fi
 
 # Check if python script exited with an error
