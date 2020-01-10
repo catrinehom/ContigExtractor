@@ -4,7 +4,8 @@ ContigExtractor is a pipeline to find read ID's from contigs from Nanopore MinIO
 Default options is to only include ID's from circular contig assemblies and contigs under 500,000 bp. 
 
 ## Requirements
-
+- Unix operating system (macOS or Linux)
+- [Python 3](https://www.python.org)
 - [KMA](https://bitbucket.org/genomicepidemiology/kma/src/master/) 
 - [Unicycler](https://github.com/rrwick/Unicycler/) 
 - [BLAST+](https://www.ncbi.nlm.nih.gov/books/NBK279671/) 
