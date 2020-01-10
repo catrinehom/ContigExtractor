@@ -38,11 +38,11 @@ if __name__ == '__main__':
 ###########################################################################
 
     # Define ID pattern
-    ID_pattern = re.compile(b"\s([\w-]+)\srunid=")
+    ID_pattern = re.compile(r"\s([\w-]+)\srunid=")
 
 
     # Open input file
-    infile = OpenFile(alignmentfrag,"rb")
+    infile = OpenFile(alignmentfrag,"r")
 
     # Make a set of IDs to make sure they are unique
     ID_set = set()
@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
     # Check if any ID is found
     if not ID_set:
-        message = "No IDs found in {}{}!",format(o, alignmentfrag)
+        message = "No reads with correct regular expression found in {}!".format(alignmentfrag)
         logfile.write(message)
         sys.exit(message)
 
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     try:
         outfile = open(outname,"w")
     except IOError as error:
-        message = "Could not open file due to: ".format(error)
+        message = "Could not open file due to: {}".format(error)
         logfile.write(message)
         sys.exit(message)
 
