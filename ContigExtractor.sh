@@ -131,13 +131,13 @@ if [ -z "${g}" ] || [ -z "${f}" ]; then
   echo "Starting STEP 1: Unicycler" | tee -a $log
 
   # Define output names
-  u="/"$o".unicycler.nponly"
+  u="/"$o".unicycler"
   g=$o$u"/assembly.gfa"
   f=$o$u"/assembly.fasta"
 
   unicycler -t $t -l $i -o $o$u --keep 0
 
-  echo "$u created with assembly in fasta and gfa format." | tee -a $log
+  echo "$u created containing assembly.fasta and assembly.gfa." | tee -a $log
 else
     echo "STEP 1 is skipped due to already inputted Unicycler assembly." | tee -a $log
     echo "Unicycler assembly used is ${g} and ${f}" | tee -a $log
@@ -154,7 +154,8 @@ echo "Starting STEP 2: Find wanted contigs" | tee -a $log
 
 cdb="contigs_database"
 res="blast_results.out"
-mkdir $o/databases
+[ -d $o/databases ] && echo "Output directory: ${o} already exists. Files will be overwritten."  | tee -a $log || mkdir $o/databases
+
 makeblastdb -in $f -parse_seqids -title $cdb -dbtype nucl -out $o/databases/$cdb
 blastn -db $o/databases/$cdb -query $r -out $o/$res
 
@@ -203,7 +204,9 @@ echo "" | tee -a $log
 
 echo "Starting STEP 5: Find IDs" | tee -a $log
 
-./IDFinder.py -i $o/reads_alignment.frag.gz -o $o
+gunzip $o/reads_alignment.frag.gz
+./IDFinder.py -i $o/reads_alignment.frag -o $o
+gzip $o/reads_alignment.frag.gz
 
 # Check if python script exited with an error
 if [ $? -eq 0 ]
