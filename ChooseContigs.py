@@ -25,7 +25,7 @@ if __name__ == '__main__':
     parser.add_argument("-i", dest="input",help="Unicycler assembly.gfa file")
     parser.add_argument("-r", dest="res", help="Result file from BLAST")
     parser.add_argument("-o", dest="o", help="Output filename")
-    parser.add_argument("-c", dest="c", help="Exclude non-circular contigs")
+    parser.add_argument("-c", dest="c", help="Exclude non-circular contigs", type=bool)
     parser.add_argument("-l", dest="l", help="Maximum length of contigs", type=int)
 
     args = parser.parse_args()
