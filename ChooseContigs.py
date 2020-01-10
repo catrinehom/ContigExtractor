@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
         circular_result = re.search(circular_pattern,line)
         if circular_result != None:
-            if circular_result.group(1) is circular_result.group(2):
+            if circular_result.group(1) == circular_result.group(2):
                 circular_contig.add(int(circular_result.group(1)))
 
     # Close file
@@ -118,7 +118,7 @@ if __name__ == '__main__':
         contig_gfa_result = re.search(contig_gfa_pattern,line)
         if contig_gfa_result != None:
             if contig_gfa_result.group(1) in matching_contigs:
-                extracted_contigs[contig_gfa_result.group(1)] = contig_gfa_result.group(2)
+                extracted_contigs[int(contig_gfa_result.group(1))] = contig_gfa_result.group(2)
 
     # Close file
     infile.close()
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     keys_to_delete = set()
 
     for key in extracted_contigs:
-        num = int(key)-1
+        num = key-1
         if c:
             if key not in circular_contig:
                 message = "Contig{} is not circular! It is therefore excluded even though it matched the database.\n".format(key)
@@ -155,8 +155,8 @@ if __name__ == '__main__':
         del extracted_contigs[key]
 
     # Check if any contigs is left after requirement filtering
-    if extracted_contigs:
-        message = "Error! No contigs is found Error! No contigs is found matching your reference with requirements length={} and circular={}. \n".format(l, c)
+    if not extracted_contigs:
+        message = "Error! No contigs is found matching your reference with requirements length={} and circular={}. \n".format(l, c)
         logfile.write(message)
         sys.exit(message)
 
