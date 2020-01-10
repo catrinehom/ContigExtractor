@@ -97,6 +97,8 @@ if __name__ == '__main__':
     parser.add_argument("-g", dest="g",help="Unicycler assembly.gfa file")
     parser.add_argument("-o", dest="o", help="Output filename")
     parser.add_argument("-f", dest="f",help="Unicycler assembly.fasta file")
+    parser.add_argument("-c", dest="c", help="Circular (True or False)",type=bool)
+    parser.add_argument("-l", dest="l",help="Maximum length of contig",type=int)
     args = parser.parse_args()
 
     # Define input as variables
