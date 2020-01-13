@@ -19,7 +19,7 @@ git clone https://github.com/catrinehom/ContigExtractor.git
 
 cd ContigExtractor/
 
-chmod a+x ContigExtractor.sh
+chmod a+x ContigExtractor
 chmod a+x ChooseContigs.py
 chmod a+x IDFinder.py
 chmod a+x ErrorHandling.py
@@ -40,7 +40,7 @@ OR
 Example of move to bin:
 
 ```
-mv ContigExtractor.sh /usr/local/bin/
+mv ContigExtractor /usr/local/bin/
 mv ChooseContigs.py /usr/local/bin/
 mv IDFinder.py /usr/local/bin/
 mv ErrorHandling.py /usr/local/bin/
@@ -51,12 +51,12 @@ mv ErrorHandling.py /usr/local/bin/
 To run full pipeline:
 
 ```
-./ContigExtractor.sh [-i <fastq filename>] [-r <references filename>] [-o <output filename>]
+ContigExtractor [-i <fastq filename>] [-r <references filename>] [-o <output filename>]
 ```
 
 If you already ran Unicycler you can input the assembly files:
 ```
-./ContigExtractor.sh [-i <fastq filename>] [-r <references filename>] [-o <output filename>] [-g <Unicycler assembly.gfa>] [-f <Unicycler assembly.fasta>]
+ContigExtractor [-i <fastq filename>] [-r <references filename>] [-o <output filename>] [-g <Unicycler assembly.gfa>] [-f <Unicycler assembly.fasta>]
 ```
 
 ### Optional flags
