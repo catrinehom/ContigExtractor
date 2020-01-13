@@ -38,11 +38,11 @@ if __name__ == '__main__':
 ###########################################################################
 
     # Define ID pattern
-    ID_pattern = re.compile(r"\s([\w-]+)\srunid=")
+    ID_pattern = re.compile(b"\s([\w-]+)\srunid=")
 
 
     # Open input file
-    infile = OpenFile(alignmentfrag,"r")
+    infile = OpenFile(alignmentfrag,"rb")
 
     # Make a set of IDs to make sure they are unique
     ID_set = set()
@@ -79,7 +79,7 @@ if __name__ == '__main__':
 
     # Print ID to outfile
     for ID in ID_set:
-        print(ID.decode("ascii"), file=outfile)
+        print(ID.decode("ascii"),, file=outfile)
 
     # Close files
     outfile.close()
