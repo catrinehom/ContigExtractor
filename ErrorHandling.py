@@ -27,7 +27,7 @@ def CheckGZip(filename):
     infile = open(filename,"rb")
     filetype = infile.read(2)
     infile.close()
-    if filetype is gzipped_type:
+    if filetype == gzipped_type:
         return True
     else:
         return False
