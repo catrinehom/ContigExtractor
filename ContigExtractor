@@ -156,8 +156,8 @@ cdb="contigs_database"
 res="blast_results.out"
 [ -d $o/databases ] && echo "Output directory: ${o} already exists. Files will be overwritten."  | tee -a $log || mkdir $o/databases
 
-makeblastdb -in $f -parse_seqids -title $cdb -dbtype nucl -out $o/databases/$cdb
-blastn -db $o/databases/$cdb -query $r -out $o/$res
+makeblastdb -in $f -parse_seqids -title $cdb -dbtype nucl -out $o/databases/$cdb -num_threads $t
+blastn -db $o/databases/$cdb -query $r -out $o/$res -num_threads $t
 
 echo "blast_results.out created with information on contigs aligning with references." | tee -a $log
 echo "Time stamp: $SECONDS seconds." | tee -a $log
@@ -204,7 +204,7 @@ echo "" | tee -a $log
 
 echo "Starting STEP 5: Find IDs" | tee -a $log
 
-python3 IDFinder.py -i $o/reads_alignment.frag -o $o
+python3 IDFinder.py -i $o/reads_alignment.frag.gz -o $o
 
 # Check if python script exited with an error
 if [ $? -eq 0 ]
