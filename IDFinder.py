@@ -47,7 +47,7 @@ if __name__ == '__main__':
     # Make a set of IDs to make sure they are unique
     ID_set = set()
 
-    # Search after ID and write dict
+    # Search after ID and add hits to ID_set
     for line in infile:
         ID_result = re.search(ID_pattern,line)
         if ID_result != None:
@@ -79,7 +79,7 @@ if __name__ == '__main__':
 
     # Print ID to outfile
     for ID in ID_set:
-        print(ID.decode("ascii"),, file=outfile)
+        print(ID.decode("ascii"), file=outfile)
 
     # Close files
     outfile.close()
