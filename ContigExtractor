@@ -6,7 +6,7 @@
 #Author: Catrine Ahrens Høm
 
 #Usage:
-    ## ./ContigExtractor.sh [-i <fastq filename>] [-r <references filename>] [-o <outputname>] [-g <optional Unicycler assembly.gfa>] [-f <optional Unicycler assembly.fasta>]
+    ## ContigExtractor [-i <fastq filename>] [-r <references filename>] [-o <outputname>] [-g <optional Unicycler assembly.gfa>] [-f <optional Unicycler assembly.fasta>]
     ## -i, fastq file path
     ## -r, reference file path
     ## -t, threads for Unicycler and kma, default=8
@@ -101,9 +101,9 @@ echo "" | tee -a $log
 
 # Check format and that the files exists
 if [ -z "${g}" ] || [ -z "${f}" ]; then
-  ./ErrorHandling.py -i $i -r $r -o $o -c $c -l $l
+  python3 ErrorHandling.py -i $i -r $r -o $o -c $c -l $l
 else
-  ./ErrorHandling.py -i $i -r $r -o $o -g $g -f $f -c $c -l $l
+  python3 ErrorHandling.py -i $i -r $r -o $o -g $g -f $f -c $c -l $l
 fi
 
 # Check if python script exited with an error
@@ -169,7 +169,7 @@ echo "" | tee -a $log
 
 echo "Starting STEP 3: Choose Contigs" | tee -a $log
 
-./ChooseContigs.py -r $o/$res -i $g -o $o -c $c -l $l
+python3 ChooseContigs.py -r $o/$res -i $g -o $o -c $c -l $l
 
 # Check if python script exited with an error
 if [ $? -eq 0 ]
@@ -205,8 +205,8 @@ echo "" | tee -a $log
 echo "Starting STEP 5: Find IDs" | tee -a $log
 
 gunzip $o/reads_alignment.frag.gz
-./IDFinder.py -i $o/reads_alignment.frag -o $o
-gzip $o/reads_alignment.frag.gz
+python3 IDFinder.py -i $o/reads_alignment.frag -o $o
+gzip $o/reads_alignment.frag
 
 # Check if python script exited with an error
 if [ $? -eq 0 ]
