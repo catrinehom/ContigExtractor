@@ -204,9 +204,7 @@ echo "" | tee -a $log
 
 echo "Starting STEP 5: Find IDs" | tee -a $log
 
-gunzip $o/reads_alignment.frag.gz
 python3 IDFinder.py -i $o/reads_alignment.frag -o $o
-gzip $o/reads_alignment.frag
 
 # Check if python script exited with an error
 if [ $? -eq 0 ]
