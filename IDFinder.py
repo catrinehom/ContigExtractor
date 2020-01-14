@@ -6,6 +6,7 @@ Description: This program can find ID corresponding to contigs from a input refe
 Step 5: This is the step 5 of the pipeline.
 Version: 1.0
 Author: Catrine Ahrens Høm
+Usage: IDFinder -i <Input file to find ID's form> -o <Output filename>
 """
 
 # Import libraries
