@@ -6,14 +6,14 @@ Description: This program can find ID corresponding to contigs from a input refe
 Step 2: This is the step 2 of the pipeline.
 Version: 1.0
 Author: Catrine Ahrens Høm
-Usage: ./ChooseContigs.py -i <Unicycler assembly.gfa file> -r <Result file from BLAST> -o <Output filename> -c <Optional: Exclude non-circular contigs> -l <Optional: Maximum length of contigs>
+Usage: ChooseContigs.py -i <Unicycler assembly.gfa file> -r <Result file from BLAST> -o <Output filename> -c <Optional: Exclude non-circular contigs> -l <Optional: Maximum length of contigs>
 """
 
 # Import libraries
 import sys
 import re
 from argparse import ArgumentParser
-from ErrorHandling import OpenFile
+from ErrorHandling import OpenFile, str2bool
 
 ###########################################################################
 # GET INPUT
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     parser.add_argument("-i", dest="input",help="Unicycler assembly.gfa file")
     parser.add_argument("-r", dest="res", help="Result file from BLAST")
     parser.add_argument("-o", dest="o", help="Output filename")
-    parser.add_argument("-c", dest="c", help="Exclude non-circular contigs", type=bool)
+    parser.add_argument("-c", dest="c", help="Exclude non-circular contigs")
     parser.add_argument("-l", dest="l", help="Maximum length of contigs", type=int)
 
     args = parser.parse_args()
@@ -34,8 +34,8 @@ if __name__ == '__main__':
     filename = args.input
     resname = args.res
     o = args.o
-    c = args.c
-    l = args.l
+    c = str2bool(args.c)
+    l = str2int(args.l)
 
     # Open log file
     logname = "{}/{}.log".format(o, o)
