@@ -1,217 +1,238 @@
-#!/usr/bin/env bash
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Program: ContigExtractor
+Description: This program can find ID corresponding to contigs from a input references in your MinION data.
+Step 0: This is the error handling of the step "Get input"
+Version: 1.0
+Author: Catrine Ahrens Høm
+"""
 
-#Program: ContigExtractor
-#Description: This program can find ID corresponding to contigs from a input references in your MinION data.
-#Version: 1.0
-#Author: Catrine Ahrens Høm
+# Import libraries
+import sys
+import os
+import gzip
+from argparse import ArgumentParser
 
-#Usage:
-    ## ContigExtractor [-i <fastq filename>] [-r <references filename>] [-o <outputname>] [-g <optional Unicycler assembly.gfa>] [-f <optional Unicycler assembly.fasta>]
-    ## -i, fastq file path
-    ## -r, reference file path
-    ## -t, threads for Unicycler and kma, default=8
-    ## -c circular contigs output only, default="True"
-    ## -l length (maximum) of contigs, default=500000
-    ## An ID list will be available after succesfull run.
+###########################################################################
+# FUNCTIONS
+###########################################################################
 
-#This pipeline consists of 5 steps:
-    ## STEP 1:  Unicycler (Skipped if assembly file is supplied)
-    ## STEP 2:  Find the contigs which match references
-    ## STEP 3:  Choose these contigs in fasta format
-    ## STEP 4:  Align fastq reads against contigs
-    ## STEP 5:  Find IDs for aligned fastq reads
+def CheckGZip(filename):
+    """
+    This function checks if the input file is gzipped.
+    """
+    gzipped_type = b"\x1f\x8b"
 
+    infile = open(filename,"rb")
+    filetype = infile.read(2)
+    infile.close()
+    if filetype == gzipped_type:
+        return True
+    else:
+        return False
 
+def OpenFile(filename,mode):
+    """
+    This function opens the input file in chosen mode.
+    """
+    try:
+        if CheckGZip(filename):
+            infile = gzip.open(filename,mode)
+        else:
+            infile = open(filename,mode)
+    except IOError as error:
+        sys.exit("Can't open file, reason: {} \n".format(error))
+    return infile
+
+def CheckFastq(filenames):
+    """
+    This function checks if all input files (list) are in fastq format.
+    Outputs a list of True/False for each file.
+    """
+    fastq = list()
+    fastq_type = b"@"
+
+    # Open all files and get the first character
+    for infile in filenames:
+        f = OpenFile(infile, "rb")
+        first_char = f.read(1);
+        f.close()
+        # Check if fastq
+        if first_char == fastq_type:
+            fastq.append(True)
+        else:
+            fastq.append(False)
+    return fastq
+
+def CheckFasta(filenames):
+    """
+    This function checks if all the input files (list) are in fasta format.
+    Outputs a list of True/False for each file.
+    """
+    fasta = list()
+    fasta_type = b">"
+
+    # Open file and get the first character
+    for infile in filenames:
+        f = OpenFile(infile, "rb")
+        first_char = f.read(1);
+        f.close()
+        # Check if fasta
+        if first_char == fasta_type:
+            fasta.append(True)
+        else:
+            fasta.append(False)
+    return fasta
+
+def Checkgfa(filenames):
+    """
+    This function checks if all the input files (list) are in gfa format.
+    Outputs a list of True/False for each file.
+    """
+    gfa = list()
+    gfa_type = b"S"
+
+    # Open file and get the first character
+    for infile in filenames:
+        f = OpenFile(infile, "rb")
+        first_char = f.read(1);
+        f.close()
+        # Check if fasta
+        if first_char == gfa_type:
+            gfa.append(True)
+        else:
+            gfa.append(False)
+    return gfa
+
+def str2bool(c):
+    if isinstance(c, bool):
+       return c
+    if c.lower() in ("yes", "true", "t", "y", "1"):
+        return True
+    elif c.lower() in ("no", "false", "f", "n", "0"):
+        return False
+    else:
+        message="Boolean value expected for c flag ('-c True' or '-c False'), but recieved: {}".format(c)
+        logfile.write(message)
+        sys.exit(message)
+
+def str2int(l):
+    try:
+        l = int(l)
+        return l
+    except:
+       message="Integer value expected for l flag, but recieved: {}, which is {}".format(l,type(l))
+       logfile.write(message)
+       sys.exit(message)
+        
 ###########################################################################
 # GET INPUT
 ###########################################################################
 
-# Start timer for logfile
-SECONDS=0
+if __name__ == '__main__':
+    # Parse input from command line
+    parser = ArgumentParser()
+    parser.add_argument("-i", dest="input_fastq", help="Fastq file", nargs = "+")
+    parser.add_argument("-r", dest="r",help="References you want to map to", nargs = "+")
+    parser.add_argument("-g", dest="g",help="Unicycler assembly.gfa file", nargs = "+")
+    parser.add_argument("-o", dest="o", help="Output filename")
+    parser.add_argument("-f", dest="f",help="Unicycler assembly.fasta file", nargs = "+")
+    parser.add_argument("-c", dest="c", help="Circular (True or False)")
+    parser.add_argument("-l", dest="l",help="Maximum length of contig")
+    args = parser.parse_args()
 
-# How to use program
-usage() { echo "Usage: $0 [-i <fastq filename>] [-r <references filename>] [-o <outputname>] [-g <optional Unicycler assembly.gfa>] [-f <optional Unicycler assembly.fasta>]" 1>&2; exit 1; }
+    # Define input as variables
+    input_fastq = args.input_fastq
+    r = args.r
+    o = args.o
+    c = args.c
+    l = args.l
 
-# Default values
-t=8
-c="True"
-l=500000
+    if args.g:
+        g = args.g
 
-# Parse flags
-while getopts ":i:r:o:g:f:h:t:c:l" opt; do
-    case "${opt}" in
-        i)
-            i=${OPTARG}
-            ;;
-        r)
-            r=${OPTARG}
-            ;;
-        o)
-            o=${OPTARG}
-            ;;
-        g)
-            g=${OPTARG}
-            ;;
-        f)
-            f=${OPTARG}
-            ;;
-        t)
-            t=${OPTARG}
-            ;;
-        c)
-            c=${OPTARG}
-            ;;
-        l)
-            l=${OPTARG}
-            ;;
-        h)
-            usage
-            echo "Optional flags:"
-            echo "-t threads for Unicycler, default=8"
-            echo "-c circular contigs output only, default='True'"
-            echo "-l maximum length of contigs, default=500000"
-            ;;
-        *)
-            echo "Invalid option: ${OPTARG}"
-            usage
-            ;;
-    esac
-done
-shift $((OPTIND-1))
+    if args.f:
+        f = args.f
 
-# Check if required flags are empty
-if [ -z "${i}" ] || [ -z "${r}" ] || [ -z "${o}" ]; then
-    echo "i, r and o are required flags"
-    usage
-fi
-
-# Make output directory
-[ -d $o ] && echo "Output directory: ${o} already exists. Files will be overwritten."  | tee -a $log || mkdir $o
-
-# Make logfile and empty it
-log=${o}/${o}.log
-touch $log
-cat /dev/null > $log
-
-date=$(date "+%Y-%m-%d %H:%M:%S")
-echo "Starting ContigExtractor ($date)" | tee -a $log
-echo "-----------------------------------------------" | tee -a $log
-echo "ContigExtractor is a pipeline to find read ID's from contigs from Nanopore MinION sequencing matching input references." | tee -a $log
-echo "" | tee -a $log
-
-# Check format and that the files exists
-if [ -z "${g}" ] || [ -z "${f}" ]; then
-  python3 ErrorHandling.py -i $i -r $r -o $o -c $c -l $l
-else
-  python3 ErrorHandling.py -i $i -r $r -o $o -g $g -f $f -c $c -l $l
-fi
-
-# Check if python script exited with an error
-if [ $? -eq 0 ]
-then
-  echo "Error handling of input done." | tee -a $log
-else
-  # Redirect stdout from echo command to stderr.
-  echo "Script exited due to input error." | tee -a $log
-  exit 1
-fi
-
-# Print files used
-echo "Input used is ${i}" | tee -a $log
-echo "References used is ${r}" | tee -a $log
-
-echo "Time stamp: $SECONDS seconds." | tee -a $log
-echo "" | tee -a $log
+    # Open log file
+    logname = "{}/{}.log".format(o, o)
+    logfile = OpenFile(logname,"a+")
 
 ###########################################################################
-# STEP 1: Unicycler
-###########################################################################
-# Run only Unicycler if no input is given
-if [ -z "${g}" ] || [ -z "${f}" ]; then
-  echo "Starting STEP 1: Unicycler" | tee -a $log
-
-  # Define output names
-  u="/"$o".unicycler"
-  g=$o$u"/assembly.gfa"
-  f=$o$u"/assembly.fasta"
-
-  unicycler -t $t -l $i -o $o$u --keep 0
-
-  echo "$u created containing assembly.fasta and assembly.gfa." | tee -a $log
-else
-    echo "STEP 1 is skipped due to already inputted Unicycler assembly." | tee -a $log
-    echo "Unicycler assembly used is ${g} and ${f}" | tee -a $log
-fi
-
-echo "Time stamp: $SECONDS seconds." | tee -a $log
-echo "" | tee -a $log
-
-###########################################################################
-# STEP 2: FIND WANTED CONTGS
+# TEST INPUT
 ###########################################################################
 
-echo "Starting STEP 2: Find wanted contigs" | tee -a $log
+    # Test c flag
+    str2bool(c)
 
-cdb="contigs_database"
-res="blast_results.out"
-[ -d $o/databases ] && echo "Output directory: ${o} already exists. Files will be overwritten."  | tee -a $log || mkdir $o/databases
+    # Test l flag
+    str2int(l)
+    
+    # Test if fasta references and fastq files is exists in folder
+    for file in input_fastq:
+        if os.path.exists(file) == False:
+            message="Input Error: {} does not exist in path.".format(file)
+            logfile.write(message)
+            sys.exit(message)
 
-makeblastdb -in $f -parse_seqids -title $cdb -dbtype nucl -out $o/databases/$cdb -num_threads $t
-blastn -db $o/databases/$cdb -query $r -out $o/$res -num_threads $t
+    for file in r:
+        if os.path.exists(file) == False:
+            message = "Input Error: {} does not exist in path.".format(file)
+            logfile.write(message)
+            sys.exit(message)
 
-echo "blast_results.out created with information on contigs aligning with references." | tee -a $log
-echo "Time stamp: $SECONDS seconds." | tee -a $log
-echo "" | tee -a $log
+    # Test if references and input files is correct format
+    r_check_fasta = CheckFasta(r)
 
-###########################################################################
-# STEP 3: CHOOSE CONTIGS
-###########################################################################
+    input_check_fasta = CheckFasta(input_fastq)
+    input_check_fastq = CheckFastq(input_fastq)
 
-echo "Starting STEP 3: Choose Contigs" | tee -a $log
+    # References should be in fasta format
+    for i in range(0,len(r_check_fasta)):
+        if r_check_fasta[i] == False:
+            message = "Input Error: {} is a wrong format. Should be fasta format.".format(r[i])
+            logfile.write(message)
+            sys.exit(message)
 
-python3 ChooseContigs.py -r $o/$res -i $g -o $o -c $c -l $l
+    # Input data should be fastq or fasta format
+    for i in range(0,len(input_check_fasta)):
+        if input_check_fasta[i] == False and input_check_fastq[i] == False:
+            message = "Input Error: {} is a wrong format. Should be fastq or fasta format.".format(input_fastq[i])
+            logfile.write(message)
+            sys.exit(message)
 
-# Check if python script exited with an error
-if [ $? -eq 0 ]
-then
-  echo "Contig(s) identified in input file." | tee -a $log
-else
-  echo "Script exited due to error." | tee -a $log
-  exit 1
-fi
+    # Test Unicycler input if given
+    if g:
+        for file in g:
+            if os.path.exists(file) == False:
+                message = "Input Error: {} does not exist in path.".format(file)
+                logfile.write(message)
+                sys.exit(message)
+        for file in f:
+            if os.path.exists(file) == False:
+                message = "Input Error: {} does not exist in path.".format(file)
+                logfile.write(message)
+                sys.exit(message)
 
-echo "Time stamp: $SECONDS seconds." | tee -a $log
-echo "" | tee -a $log
 
-###########################################################################
-# STEP 4:  KMA READS AGAINST CONTIGS
-###########################################################################
+        ### Check that the input is fasta
+        f_check_fasta = CheckFasta(f)
+        
+        for i in range(0,len(f_check_fasta)):
+            if f_check_fasta[i] == False:
+                message = "Input Error: {} is a wrong format. Should be fasta format.".format(f[i])
+                logfile.write(message)
+                sys.exit(message)
 
-echo "Starting STEP 4: KMA reads against contigs." | tee -a $log
+        ### Check that the input is gfa
+        g_check_gfa = Checkgfa(g)
+                
+        for i in range(0,len(g_check_gfa)):
+                if g_check_gfa[i] == False:
+                    message = "Input Error: {} is a wrong format. Should be gfa format.".format(g[i])
+                    logfile.write(message)
+                    sys.exit(message)
 
-#Command used to index plasmid database:
-kma index -i $o/assembled_contigs.fasta -o $o/databases/reads_database
-
-#Command to run KMA:
-kma -i $i -o $o/reads_alignment -t_db $o/databases/reads_database -mrs 0.5 -bcNano -mp 20 -mem_mode -t $t -1t1
-
-echo "Time stamp: $SECONDS seconds." | tee -a $log
-echo "" | tee -a $log
-
-###########################################################################
-# STEP 5:  FIND IDs
-###########################################################################
-
-echo "Starting STEP 5: Find IDs" | tee -a $log
-
-python3 IDFinder.py -i $o/reads_alignment.frag.gz -o $o
-
-# Check if python script exited with an error
-if [ $? -eq 0 ]
-then
-  echo "IDs found! ${o}_ID.txt is saved in ${o} directory." | tee -a $log
-else
-  echo "No IDs found!" | tee -a $log
-fi
-
-echo "Time stamp: $SECONDS seconds." | tee -a $log
+    # Close files
+    logfile.close()
