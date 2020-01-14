@@ -19,7 +19,7 @@ from argparse import ArgumentParser
 ###########################################################################
 
 def CheckGZip(filename):
-    """
+    """ 
     This function checks if the input file is gzipped.
     """
     gzipped_type = b"\x1f\x8b"
@@ -85,6 +85,47 @@ def CheckFasta(filenames):
             fasta.append(False)
     return fasta
 
+def Checkgfa(filenames):
+    """
+    This function checks if all the input files (list) are in gfa format.
+    Outputs a list of True/False for each file.
+    """
+    gfa = list()
+    gfa_type = b"S"
+
+    # Open file and get the first character
+    for infile in filenames:
+        f = OpenFile(infile, "rb")
+        first_char = f.read(1);
+        f.close()
+        # Check if fasta
+        if first_char == gfa_type:
+            gfa.append(True)
+        else:
+            gfa.append(False)
+    return gfa
+
+def str2bool(c):
+    if isinstance(c, bool):
+       return c
+    if c.lower() in ("yes", "true", "t", "y", "1"):
+        return True
+    elif c.lower() in ("no", "false", "f", "n", "0"):
+        return False
+    else:
+        message="Boolean value expected for c flag ('-c True' or '-c False'), but recieved: {}".format(c)
+        logfile.write(message)
+        sys.exit(message)
+
+def str2int(l):
+    try:
+        l = int(l)
+        return l
+    except:
+       message="Integer value expected for l flag, but recieved: {}, which is {}".format(l,type(l))
+       logfile.write(message)
+       sys.exit(message)
+        
 ###########################################################################
 # GET INPUT
 ###########################################################################
@@ -94,17 +135,19 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("-i", dest="input_fastq", help="Fastq file", nargs = "+")
     parser.add_argument("-r", dest="r",help="References you want to map to", nargs = "+")
-    parser.add_argument("-g", dest="g",help="Unicycler assembly.gfa file")
+    parser.add_argument("-g", dest="g",help="Unicycler assembly.gfa file", nargs = "+")
     parser.add_argument("-o", dest="o", help="Output filename")
-    parser.add_argument("-f", dest="f",help="Unicycler assembly.fasta file")
-    parser.add_argument("-c", dest="c", help="Circular (True or False)",type=bool)
-    parser.add_argument("-l", dest="l",help="Maximum length of contig",type=int)
+    parser.add_argument("-f", dest="f",help="Unicycler assembly.fasta file", nargs = "+")
+    parser.add_argument("-c", dest="c", help="Circular (True or False)")
+    parser.add_argument("-l", dest="l",help="Maximum length of contig")
     args = parser.parse_args()
 
     # Define input as variables
     input_fastq = args.input_fastq
     r = args.r
     o = args.o
+    c = args.c
+    l = args.l
 
     if args.g:
         g = args.g
@@ -120,11 +163,18 @@ if __name__ == '__main__':
 # TEST INPUT
 ###########################################################################
 
+    # Test c flag
+    str2bool(c)
+
+    # Test l flag
+    str2int(l)
+    
     # Test if fasta references and fastq files is exists in folder
     for file in input_fastq:
         if os.path.exists(file) == False:
-            logfile.write("Input Error: {} does not exist in path.".format(file))
-            sys.exit("Input Error: {} does not exist in path.".format(file))
+            message="Input Error: {} does not exist in path.".format(file)
+            logfile.write(message)
+            sys.exit(message)
 
     for file in r:
         if os.path.exists(file) == False:
@@ -153,45 +203,36 @@ if __name__ == '__main__':
             sys.exit(message)
 
     # Test Unicycler input if given
-    if args.g:
-        if os.path.exists(g) == False:
-            message = "Input Error: {} does not exist in path.".format(g)
-            logfile.write(message)
-            sys.exit(message)
-
-        if os.path.exists(f) == False:
-            message = "Input Error: {} does not exist in path.".format(f)
-            logfile.write(message)
-            sys.exit(message)
-
-
-        ### Check that the input is gfa and fasta
-        # Define variables
-        fasta_type = ">"
-        gfa_type = "S"
-
-        # Open f file and get the first character
-        file = open(f, "r")
-        first_char = file.read(1);
-        file.close()
-
-        # Check if fasta
-        if first_char != fasta_type:
-            message = "Error! Unknown format of input file: {}. Should be fasta format.".format(f)
-            logfile.write(message)
-            sys.exit(message)
+    if g:
+        for file in g:
+            if os.path.exists(file) == False:
+                message = "Input Error: {} does not exist in path.".format(file)
+                logfile.write(message)
+                sys.exit(message)
+        for file in f:
+            if os.path.exists(file) == False:
+                message = "Input Error: {} does not exist in path.".format(file)
+                logfile.write(message)
+                sys.exit(message)
 
 
-        # Open g file and get the first character
-        file = open(g, "r")
-        first_char = file.read(1);
-        file.close()
+        ### Check that the input is fasta
+        f_check_fasta = CheckFasta(f)
+        
+        for i in range(0,len(f_check_fasta)):
+            if f_check_fasta[i] == False:
+                message = "Input Error: {} is a wrong format. Should be fasta format.".format(f[i])
+                logfile.write(message)
+                sys.exit(message)
 
-        # Check if gfa
-        if first_char != gfa_type:
-            message = "Error! Unknown format of input file: {}. Should be gfa format".format(g)
-            logfile(message)
-            sys.exit(message)
+        ### Check that the input is gfa
+        g_check_gfa = Checkgfa(g)
+                
+        for i in range(0,len(g_check_gfa)):
+                if g_check_gfa[i] == False:
+                    message = "Input Error: {} is a wrong format. Should be gfa format.".format(g[i])
+                    logfile.write(message)
+                    sys.exit(message)
 
     # Close files
     logfile.close()
